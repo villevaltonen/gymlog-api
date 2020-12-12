@@ -40,26 +40,26 @@ func (a *Application) Run(addr string) {
 	log.Fatal(http.ListenAndServe(":8010", a.Router))
 }
 
-func (a *Application) getProduct(w http.ResponseWriter, r *http.Request) {
+func (a *Application) getSet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid product ID")
+		respondWithError(w, http.StatusBadRequest, "Invalid set ID")
 		return
 	}
 
-	p := product{ID: id}
-	if err := p.getProduct(a.DB); err != nil {
+	s := set{ID: id}
+	if err := s.getSet(a.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			respondWithError(w, http.StatusNotFound, "Product not found")
+			respondWithError(w, http.StatusNotFound, "Set not found")
 		default:
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, p)
+	respondWithJSON(w, http.StatusOK, s)
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
@@ -74,7 +74,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-func (a *Application) getProducts(w http.ResponseWriter, r *http.Request) {
+func (a *Application) getSets(w http.ResponseWriter, r *http.Request) {
 	count, _ := strconv.Atoi(r.FormValue("count"))
 	start, _ := strconv.Atoi(r.FormValue("start"))
 
@@ -85,7 +85,7 @@ func (a *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 		start = 0
 	}
 
-	products, err := getProducts(a.DB, start, count)
+	products, err := getSets(a.DB, start, count)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -94,58 +94,59 @@ func (a *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, products)
 }
 
-func (a *Application) createProduct(w http.ResponseWriter, r *http.Request) {
-	var p product
+func (a *Application) createSet(w http.ResponseWriter, r *http.Request) {
+	var s set
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&p); err != nil {
+	if err := decoder.Decode(&s); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
 
-	if err := p.createProduct(a.DB); err != nil {
+	if err := s.createSet(a.DB); err != nil {
+		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, p)
+	respondWithJSON(w, http.StatusCreated, s)
 }
 
-func (a *Application) updateProduct(w http.ResponseWriter, r *http.Request) {
+func (a *Application) updateSet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid product ID")
+		respondWithError(w, http.StatusBadRequest, "Invalid set ID")
 		return
 	}
 
-	var p product
+	var s set
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&p); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid resquest payload")
+	if err := decoder.Decode(&s); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
-	p.ID = id
+	s.ID = id
 
-	if err := p.updateProduct(a.DB); err != nil {
+	if err := s.updateSet(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, p)
+	respondWithJSON(w, http.StatusOK, s)
 }
 
-func (a *Application) deleteProduct(w http.ResponseWriter, r *http.Request) {
+func (a *Application) deleteSet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid Product ID")
+		respondWithError(w, http.StatusBadRequest, "Invalid Set ID")
 		return
 	}
 
-	p := product{ID: id}
-	if err := p.deleteProduct(a.DB); err != nil {
+	s := set{ID: id}
+	if err := s.deleteSet(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -154,9 +155,9 @@ func (a *Application) deleteProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Application) initializeRoutes() {
-	a.Router.HandleFunc("/products", a.getProducts).Methods("GET")
-	a.Router.HandleFunc("/product", a.createProduct).Methods("POST")
-	a.Router.HandleFunc("/product/{id:[0-9]+}", a.getProduct).Methods("GET")
-	a.Router.HandleFunc("/product/{id:[0-9]+}", a.updateProduct).Methods("PUT")
-	a.Router.HandleFunc("/product/{id:[0-9]+}", a.deleteProduct).Methods("DELETE")
+	a.Router.HandleFunc("/api/v1/sets", a.getSets).Methods("GET")
+	a.Router.HandleFunc("/api/v1/sets", a.createSet).Methods("POST")
+	a.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", a.getSet).Methods("GET")
+	a.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", a.updateSet).Methods("PUT")
+	a.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", a.deleteSet).Methods("DELETE")
 }

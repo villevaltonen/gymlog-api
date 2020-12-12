@@ -4,35 +4,37 @@ import (
 	"database/sql"
 )
 
-type product struct {
-	ID    int     `json:"id"`
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
+type set struct {
+	ID          int     `json:"id"`
+	UserID      string  `json:"userId"`
+	Weight      float64 `json:"weight"`
+	Exercise    string  `json:"exercise"`
+	Repetitions int     `json:"repetitions"`
 }
 
-func (p *product) getProduct(db *sql.DB) error {
-	return db.QueryRow("SELECT name, price FROM products WHERE id=$1",
-		p.ID).Scan(&p.Name, &p.Price)
+func (s *set) getSet(db *sql.DB) error {
+	return db.QueryRow("SELECT user_id, weight, exercise, repetitions FROM sets WHERE id=$1",
+		s.ID).Scan(&s.UserID, &s.Weight, &s.Exercise, &s.Repetitions)
 }
 
-func (p *product) updateProduct(db *sql.DB) error {
+func (s *set) updateSet(db *sql.DB) error {
 	_, err :=
-		db.Exec("UPDATE products SET name=$1, price=$2 WHERE id=$3",
-			p.Name, p.Price, p.ID)
+		db.Exec("UPDATE sets SET user_id=$2, weight=$3, exercise=$4, repetitions=$5 WHERE id=$1",
+			s.ID, s.UserID, s.Weight, s.Exercise, s.Repetitions)
 
 	return err
 }
 
-func (p *product) deleteProduct(db *sql.DB) error {
-	_, err := db.Exec("DELETE FROM products WHERE id=$1", p.ID)
+func (s *set) deleteSet(db *sql.DB) error {
+	_, err := db.Exec("DELETE FROM sets WHERE id=$1", s.ID)
 
 	return err
 }
 
-func (p *product) createProduct(db *sql.DB) error {
+func (s *set) createSet(db *sql.DB) error {
 	err := db.QueryRow(
-		"INSERT INTO products(name, price) VALUES($1, $2) RETURNING id",
-		p.Name, p.Price).Scan(&p.ID)
+		"INSERT INTO sets(user_id, weight, exercise, repetitions) VALUES($1, $2, $3, $4) RETURNING id",
+		s.UserID, s.Weight, s.Exercise, s.Repetitions).Scan(&s.ID)
 
 	if err != nil {
 		return err
@@ -41,9 +43,9 @@ func (p *product) createProduct(db *sql.DB) error {
 	return nil
 }
 
-func getProducts(db *sql.DB, start, count int) ([]product, error) {
+func getSets(db *sql.DB, start, count int) ([]set, error) {
 	rows, err := db.Query(
-		"SELECT id, name,  price FROM products LIMIT $1 OFFSET $2",
+		"SELECT id, user_id, weight, exercise, repetitions FROM sets LIMIT $1 OFFSET $2",
 		count, start)
 
 	if err != nil {
@@ -52,15 +54,15 @@ func getProducts(db *sql.DB, start, count int) ([]product, error) {
 
 	defer rows.Close()
 
-	products := []product{}
+	sets := []set{}
 
 	for rows.Next() {
-		var p product
-		if err := rows.Scan(&p.ID, &p.Name, &p.Price); err != nil {
+		var s set
+		if err := rows.Scan(&s.ID, &s.UserID, &s.Weight, s.Exercise, s.Repetitions); err != nil {
 			return nil, err
 		}
-		products = append(products, p)
+		sets = append(sets, s)
 	}
 
-	return products, nil
+	return sets, nil
 }
