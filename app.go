@@ -44,6 +44,7 @@ func (a *Application) getSet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
+		log.Println(err.Error())
 		respondWithError(w, http.StatusBadRequest, "Invalid set ID")
 		return
 	}
@@ -52,8 +53,10 @@ func (a *Application) getSet(w http.ResponseWriter, r *http.Request) {
 	if err := s.getSet(a.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
+			log.Println(err.Error())
 			respondWithError(w, http.StatusNotFound, "Set not found")
 		default:
+			log.Println(err.Error())
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
@@ -87,6 +90,7 @@ func (a *Application) getSets(w http.ResponseWriter, r *http.Request) {
 
 	products, err := getSets(a.DB, start, count)
 	if err != nil {
+		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -98,6 +102,7 @@ func (a *Application) createSet(w http.ResponseWriter, r *http.Request) {
 	var s set
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&s); err != nil {
+		log.Println(err.Error())
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
@@ -116,6 +121,7 @@ func (a *Application) updateSet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
+		log.Println(err.Error())
 		respondWithError(w, http.StatusBadRequest, "Invalid set ID")
 		return
 	}
@@ -123,6 +129,7 @@ func (a *Application) updateSet(w http.ResponseWriter, r *http.Request) {
 	var s set
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&s); err != nil {
+		log.Println(err.Error())
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
@@ -130,6 +137,7 @@ func (a *Application) updateSet(w http.ResponseWriter, r *http.Request) {
 	s.ID = id
 
 	if err := s.updateSet(a.DB); err != nil {
+		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -141,12 +149,14 @@ func (a *Application) deleteSet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
+		log.Println(err.Error())
 		respondWithError(w, http.StatusBadRequest, "Invalid Set ID")
 		return
 	}
 
 	s := set{ID: id}
 	if err := s.deleteSet(a.DB); err != nil {
+		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
