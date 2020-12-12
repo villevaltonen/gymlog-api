@@ -10,4 +10,4 @@ An example application for tracking workouts written in Go. The application prov
 - Script the testing from container setup to tearing it down
 - Finish Docker compose
 - JWT-authentication
-- REST APIs for user mgmt and sets
+- REST APIs for user mgmt
