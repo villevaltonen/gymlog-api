@@ -13,14 +13,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// App is an instance of an application with router and db-connection
-type App struct {
+// Application is an instance of an application with router and db-connection
+type Application struct {
 	Router *mux.Router
 	DB     *sql.DB
 }
 
 // Initialize initializes the app
-func (a *App) Initialize(user, password, dbname string) {
+func (a *Application) Initialize(user, password, dbname string) {
 	connectionString :=
 		fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, password, dbname)
 
@@ -36,11 +36,11 @@ func (a *App) Initialize(user, password, dbname string) {
 }
 
 // Run starts the HTTP-server
-func (a *App) Run(addr string) {
+func (a *Application) Run(addr string) {
 	log.Fatal(http.ListenAndServe(":8010", a.Router))
 }
 
-func (a *App) getProduct(w http.ResponseWriter, r *http.Request) {
+func (a *Application) getProduct(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -74,7 +74,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-func (a *App) getProducts(w http.ResponseWriter, r *http.Request) {
+func (a *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 	count, _ := strconv.Atoi(r.FormValue("count"))
 	start, _ := strconv.Atoi(r.FormValue("start"))
 
@@ -94,7 +94,7 @@ func (a *App) getProducts(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, products)
 }
 
-func (a *App) createProduct(w http.ResponseWriter, r *http.Request) {
+func (a *Application) createProduct(w http.ResponseWriter, r *http.Request) {
 	var p product
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&p); err != nil {
@@ -111,7 +111,7 @@ func (a *App) createProduct(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, p)
 }
 
-func (a *App) updateProduct(w http.ResponseWriter, r *http.Request) {
+func (a *Application) updateProduct(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -136,7 +136,7 @@ func (a *App) updateProduct(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, p)
 }
 
-func (a *App) deleteProduct(w http.ResponseWriter, r *http.Request) {
+func (a *Application) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -153,7 +153,7 @@ func (a *App) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
-func (a *App) initializeRoutes() {
+func (a *Application) initializeRoutes() {
 	a.Router.HandleFunc("/products", a.getProducts).Methods("GET")
 	a.Router.HandleFunc("/product", a.createProduct).Methods("POST")
 	a.Router.HandleFunc("/product/{id:[0-9]+}", a.getProduct).Methods("GET")

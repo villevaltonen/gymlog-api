@@ -14,7 +14,7 @@ import (
 	"strconv"
 )
 
-var a App
+var a Application
 
 func TestMain(m *testing.M) {
 	a.Initialize(
