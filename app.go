@@ -37,6 +37,7 @@ func (a *Application) Initialize(user, password, dbname string) {
 
 // Run starts the HTTP-server
 func (a *Application) Run(addr string) {
+	log.Println("Starting an HTTP-server!")
 	log.Fatal(http.ListenAndServe(":8010", a.Router))
 }
 
@@ -63,18 +64,6 @@ func (a *Application) getSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, s)
-}
-
-func respondWithError(w http.ResponseWriter, code int, message string) {
-	respondWithJSON(w, code, map[string]string{"error": message})
-}
-
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	response, _ := json.Marshal(payload)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
 }
 
 func (a *Application) getSets(w http.ResponseWriter, r *http.Request) {
@@ -162,6 +151,20 @@ func (a *Application) deleteSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+}
+
+// utils
+
+func respondWithError(w http.ResponseWriter, code int, message string) {
+	respondWithJSON(w, code, map[string]string{"error": message})
+}
+
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	response, _ := json.Marshal(payload)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write(response)
 }
 
 func (a *Application) initializeRoutes() {

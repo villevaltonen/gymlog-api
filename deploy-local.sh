@@ -1,3 +1,6 @@
-# deploy docker stack
-docker-compose rm --stop --force -v
-docker-compose -f docker-compose.yml up
+# run db
+docker run -it -p 5432:5432 --name=postgres_go -e POSTGRES_PASSWORD=password -d postgres
+
+# build and run the app
+go build -o ./bin/gymlog-go
+./bin/gymlog-go
