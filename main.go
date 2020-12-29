@@ -1,9 +1,13 @@
 package main
 
-import "os"
+import (
+	"os"
+
+	"github.com/villevaltonen/gymlog-go/internal"
+)
 
 func main() {
-	a := Application{}
+	a := internal.Application{}
 	a.Initialize(
 		os.Getenv("APP_DB_USERNAME"),
 		os.Getenv("APP_DB_PASSWORD"),

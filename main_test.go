@@ -12,9 +12,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+
+	"github.com/villevaltonen/gymlog-go/internal"
 )
 
-var a Application
+var a internal.Application
 
 func TestMain(m *testing.M) {
 	a.Initialize(

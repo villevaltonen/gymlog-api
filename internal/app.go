@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"database/sql"
@@ -13,7 +13,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
-	"github.com/villevaltonen/gymlog-go/internal"
 )
 
 // Application is an instance of an application with router and db-connection
@@ -53,7 +52,7 @@ func (a *Application) getSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := internal.Set{ID: id}
+	s := Set{ID: id}
 	if err := s.GetSet(a.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -80,7 +79,7 @@ func (a *Application) getSets(w http.ResponseWriter, r *http.Request) {
 		start = 0
 	}
 
-	products, err := internal.GetSets(a.DB, start, count)
+	products, err := GetSets(a.DB, start, count)
 	if err != nil {
 		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -91,7 +90,7 @@ func (a *Application) getSets(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Application) createSet(w http.ResponseWriter, r *http.Request) {
-	var s internal.Set
+	var s Set
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&s); err != nil {
 		log.Println(err.Error())
@@ -118,7 +117,7 @@ func (a *Application) updateSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var s internal.Set
+	var s Set
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&s); err != nil {
 		log.Println(err.Error())
@@ -146,7 +145,7 @@ func (a *Application) deleteSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := internal.Set{ID: id}
+	s := Set{ID: id}
 	if err := s.DeleteSet(a.DB); err != nil {
 		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, err.Error())
