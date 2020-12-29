@@ -13,6 +13,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/villevaltonen/gymlog-go/internal"
 )
 
 // Application is an instance of an application with router and db-connection
@@ -52,8 +53,8 @@ func (a *Application) getSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := set{ID: id}
-	if err := s.getSet(a.DB); err != nil {
+	s := internal.Set{ID: id}
+	if err := s.GetSet(a.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
 			log.Println(err.Error())
@@ -79,7 +80,7 @@ func (a *Application) getSets(w http.ResponseWriter, r *http.Request) {
 		start = 0
 	}
 
-	products, err := getSets(a.DB, start, count)
+	products, err := internal.GetSets(a.DB, start, count)
 	if err != nil {
 		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -90,7 +91,7 @@ func (a *Application) getSets(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Application) createSet(w http.ResponseWriter, r *http.Request) {
-	var s set
+	var s internal.Set
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&s); err != nil {
 		log.Println(err.Error())
@@ -99,7 +100,7 @@ func (a *Application) createSet(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if err := s.createSet(a.DB); err != nil {
+	if err := s.CreateSet(a.DB); err != nil {
 		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -117,7 +118,7 @@ func (a *Application) updateSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var s set
+	var s internal.Set
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&s); err != nil {
 		log.Println(err.Error())
@@ -127,7 +128,7 @@ func (a *Application) updateSet(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	s.ID = id
 
-	if err := s.updateSet(a.DB); err != nil {
+	if err := s.UpdateSet(a.DB); err != nil {
 		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -145,8 +146,8 @@ func (a *Application) deleteSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := set{ID: id}
-	if err := s.deleteSet(a.DB); err != nil {
+	s := internal.Set{ID: id}
+	if err := s.DeleteSet(a.DB); err != nil {
 		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -190,20 +191,20 @@ var users = map[string]string{
 	"user2": "password2",
 }
 
-// Struct for username and password
+// Credentials contain username and password
 type Credentials struct {
 	Password string `json:"password"`
 	Username string `json:"username"`
 }
 
-// Struct, which will be encoded to JWT
+// Claims is a struct, which is used in JWT cookie
 // Includes embedded type jwt.StandardClaims to provide additional fields like expiry time
 type Claims struct {
 	Username string `json:"username"`
 	jwt.StandardClaims
 }
 
-// Handler for login
+// Login handles login requests
 func Login(w http.ResponseWriter, r *http.Request) {
 	var creds Credentials
 
@@ -256,6 +257,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Welcome is a handler for a test API for authentication
 func Welcome(w http.ResponseWriter, r *http.Request) {
 	// We can obtain the session token from auth requests cookies
 	c, err := r.Cookie("token")
@@ -300,6 +302,7 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("Welcome %s!", claims.Username)))
 }
 
+// Refresh provides a way to refresh a JWT
 func Refresh(w http.ResponseWriter, r *http.Request) {
 	// (BEGIN) The code uptil this point is the same as the first part of the `Welcome` route
 	c, err := r.Cookie("token")

@@ -1,10 +1,11 @@
-package main
+package internal
 
 import (
 	"database/sql"
 )
 
-type set struct {
+// Set is a basic entity for holding sets
+type Set struct {
 	ID          int     `json:"id"`
 	UserID      string  `json:"userId"`
 	Weight      float64 `json:"weight"`
@@ -12,12 +13,12 @@ type set struct {
 	Repetitions int     `json:"repetitions"`
 }
 
-func (s *set) getSet(db *sql.DB) error {
+func (s *Set) GetSet(db *sql.DB) error {
 	return db.QueryRow("SELECT user_id, weight, exercise, repetitions FROM sets WHERE id=$1",
 		s.ID).Scan(&s.UserID, &s.Weight, &s.Exercise, &s.Repetitions)
 }
 
-func (s *set) updateSet(db *sql.DB) error {
+func (s *Set) UpdateSet(db *sql.DB) error {
 	_, err :=
 		db.Exec("UPDATE sets SET user_id=$2, weight=$3, exercise=$4, repetitions=$5 WHERE id=$1",
 			s.ID, s.UserID, s.Weight, s.Exercise, s.Repetitions)
@@ -25,13 +26,13 @@ func (s *set) updateSet(db *sql.DB) error {
 	return err
 }
 
-func (s *set) deleteSet(db *sql.DB) error {
+func (s *Set) DeleteSet(db *sql.DB) error {
 	_, err := db.Exec("DELETE FROM sets WHERE id=$1", s.ID)
 
 	return err
 }
 
-func (s *set) createSet(db *sql.DB) error {
+func (s *Set) CreateSet(db *sql.DB) error {
 	err := db.QueryRow(
 		"INSERT INTO sets(user_id, weight, exercise, repetitions) VALUES($1, $2, $3, $4) RETURNING id",
 		s.UserID, s.Weight, s.Exercise, s.Repetitions).Scan(&s.ID)
@@ -43,7 +44,7 @@ func (s *set) createSet(db *sql.DB) error {
 	return nil
 }
 
-func getSets(db *sql.DB, start, count int) ([]set, error) {
+func GetSets(db *sql.DB, start, count int) ([]Set, error) {
 	rows, err := db.Query(
 		"SELECT id, user_id, weight, exercise, repetitions FROM sets LIMIT $1 OFFSET $2",
 		count, start)
@@ -54,10 +55,10 @@ func getSets(db *sql.DB, start, count int) ([]set, error) {
 
 	defer rows.Close()
 
-	sets := []set{}
+	sets := []Set{}
 
 	for rows.Next() {
-		var s set
+		var s Set
 		if err := rows.Scan(&s.ID, &s.UserID, &s.Weight, s.Exercise, s.Repetitions); err != nil {
 			return nil, err
 		}
