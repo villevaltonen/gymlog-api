@@ -30,6 +30,7 @@ func TestEmptyTable(t *testing.T) {
 	clearTable()
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets", nil)
+	req.AddCookie(authenticate())
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
@@ -43,6 +44,7 @@ func TestGetNonExistentSet(t *testing.T) {
 	clearTable()
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/11", nil)
+	req.AddCookie(authenticate())
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusNotFound, response.Code)
@@ -60,6 +62,7 @@ func TestCreateSet(t *testing.T) {
 
 	var jsonStr = []byte(`{"userId":"test user id", "weight": 111.22, "exercise":"squat", "repetitions":10}`)
 	req, _ := http.NewRequest("POST", "/api/v1/sets", bytes.NewBuffer(jsonStr))
+	req.AddCookie(authenticate())
 	req.Header.Set("Content-Type", "application/json")
 
 	response := executeRequest(req)
@@ -98,6 +101,7 @@ func TestGetSet(t *testing.T) {
 	addSets(1)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
+	req.AddCookie(authenticate())
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
@@ -109,12 +113,14 @@ func TestUpdateSet(t *testing.T) {
 	addSets(1)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
+	req.AddCookie(authenticate())
 	response := executeRequest(req)
 	var originalSet map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &originalSet)
 
 	var jsonStr = []byte(`{"userId":"test user updated id", "weight": 222.22, "exercise":"bench", "repetitions":15}`)
 	req, _ = http.NewRequest("PUT", "/api/v1/sets/1", bytes.NewBuffer(jsonStr))
+	req.AddCookie(authenticate())
 	req.Header.Set("Content-Type", "application/json")
 
 	response = executeRequest(req)
@@ -152,20 +158,64 @@ func TestDeleteSet(t *testing.T) {
 	addSets(1)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
+	req.AddCookie(authenticate())
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	req, _ = http.NewRequest("DELETE", "/api/v1/sets/1", nil)
+	req.AddCookie(authenticate())
 	response = executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	req, _ = http.NewRequest("GET", "/api/v1/sets/1", nil)
+	req.AddCookie(authenticate())
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 }
 
+func TestLogin(t *testing.T) {
+	// correct credentials
+	var jsonStr1 = []byte(`{"username":"user1", "password": "password1"}`)
+	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr1))
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	// incorrect password
+	var jsonStr2 = []byte(`{"username":"user1", "password": "passwordnotcorrect"}`)
+	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr2))
+	response = executeRequest(req)
+	checkResponseCode(t, http.StatusUnauthorized, response.Code)
+
+	// incorrect username
+	var jsonStr3 = []byte(`{"username":"usernotfound", "password": "password1"}`)
+	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr3))
+	response = executeRequest(req)
+	checkResponseCode(t, http.StatusUnauthorized, response.Code)
+}
+
+func TestHeartbeat(t *testing.T) {
+	// without JWT
+	req1, _ := http.NewRequest("GET", "/api/heartbeat", nil)
+	response1 := executeRequest(req1)
+	checkResponseCode(t, http.StatusUnauthorized, response1.Code)
+
+	// with JWT
+	req3, _ := http.NewRequest("GET", "/api/heartbeat", nil)
+	req3.AddCookie(authenticate())
+	response3 := executeRequest(req3)
+	checkResponseCode(t, http.StatusOK, response3.Code)
+}
+
 // utils
+
+func authenticate() *http.Cookie {
+	var jsonStr = []byte(`{"username":"user1", "password": "password1"}`)
+	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr))
+	response := executeRequest(req)
+	cookie := response.Result().Cookies()[0]
+	return cookie
+}
 
 func ensureTableExists() {
 	if _, err := s.DB.Exec(tableCreationQuery); err != nil {

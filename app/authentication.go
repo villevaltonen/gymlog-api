@@ -43,11 +43,9 @@ func (s *Server) handleLogin() http.HandlerFunc {
 			return
 		}
 
-		log.Println(creds)
 		// Get expected password from our in memory map
 		// TODO: Use database
 		expectedPassword, ok := users[creds.Username]
-		log.Println(expectedPassword)
 
 		// If password exists for the given user
 		// AND, if it is the same as in request body, we can move ahead
