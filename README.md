@@ -11,3 +11,5 @@ An application for tracking workouts written in Go. The application is built for
 ### TODO:
 - pick user id from jwt and add to sql queries to ensure authorization
 - REST APIs for user mgmt (create user etc.)
+- CSRF-protection (httpOnly cookie etc.)
+- split up tests to multiple files
