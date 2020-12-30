@@ -1,4 +1,4 @@
-package internal
+package app
 
 import (
 	"encoding/json"
@@ -19,7 +19,7 @@ var users = map[string]string{
 }
 
 // Credentials contain username and password
-type Credentials struct {
+type credentials struct {
 	Password string `json:"password"`
 	Username string `json:"username"`
 }
@@ -28,12 +28,13 @@ type Credentials struct {
 // Includes embedded type jwt.StandardClaims to provide additional fields like expiry time
 type Claims struct {
 	Username string `json:"username"`
+	UserID   string `json:"userId"`
 	jwt.StandardClaims
 }
 
 // Login handles login requests
 func Login(w http.ResponseWriter, r *http.Request) {
-	var creds Credentials
+	var creds credentials
 
 	// Decode JSON body to get credentials
 	err := json.NewDecoder(r.Body).Decode(&creds)
@@ -43,9 +44,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println(creds)
 	// Get expected password from our in memory map
 	// TODO: Use database
 	expectedPassword, ok := users[creds.Username]
+	log.Println(expectedPassword)
 
 	// If password exists for the given user
 	// AND, if it is the same as in request body, we can move ahead

@@ -11,3 +11,4 @@ An example application for tracking workouts written in Go. The application prov
 - Finish Docker compose
 - JWT-authentication
 - REST APIs for user mgmt
+- Make DB accessible from routers in other packages

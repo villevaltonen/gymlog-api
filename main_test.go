@@ -13,13 +13,13 @@ import (
 	"net/http/httptest"
 	"strconv"
 
-	"github.com/villevaltonen/gymlog-go/internal"
+	"github.com/villevaltonen/gymlog-go/app"
 )
 
-var a internal.Application
+var s app.Server
 
 func TestMain(m *testing.M) {
-	a.Initialize(
+	s.Initialize(
 		os.Getenv("APP_DB_USERNAME"),
 		os.Getenv("APP_DB_PASSWORD"),
 		os.Getenv("APP_DB_NAME"))
@@ -62,7 +62,7 @@ func TestCreateSet(t *testing.T) {
 
 	clearTable()
 
-	var jsonStr = []byte(`{"userId":"test user id", "weight": 11.22, "exercise":"squat", "repetitions":10}`)
+	var jsonStr = []byte(`{"userId":"test user id", "weight": 111.22, "exercise":"squat", "repetitions":10}`)
 	req, _ := http.NewRequest("POST", "/api/v1/sets", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -76,7 +76,7 @@ func TestCreateSet(t *testing.T) {
 		t.Errorf("Expected user id to be 'test user id'. Got '%v'", m["userId"])
 	}
 
-	if m["weight"] != 11.22 {
+	if m["weight"] != 111.22 {
 		t.Errorf("Expected weight to be '11.22'. Got '%v'", m["weight"])
 	}
 
@@ -116,8 +116,9 @@ func TestUpdateSet(t *testing.T) {
 	response := executeRequest(req)
 	var originalSet map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &originalSet)
+	log.Printf("id %s", originalSet)
 
-	var jsonStr = []byte(`{"user_id":"test user updated id", "weight": 22.22, "exercise":"bench", "repetitions":15}`)
+	var jsonStr = []byte(`{"userId":"test user updated id", "weight": 222.22, "exercise":"bench", "repetitions":15}`)
 	req, _ = http.NewRequest("PUT", "/api/v1/sets/1", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -127,10 +128,7 @@ func TestUpdateSet(t *testing.T) {
 
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
-
-	if m["id"] != originalSet["id"] {
-		t.Errorf("Expected the id to remain the same (%v). Got %v", originalSet["id"], m["id"])
-	}
+	log.Printf("id %s", m)
 
 	if m["userId"] == originalSet["userId"] {
 		t.Errorf("Expected the userId to change from '%v' to '%v'. Got '%v'", originalSet["userId"], m["userId"], m["userId"])
@@ -146,6 +144,12 @@ func TestUpdateSet(t *testing.T) {
 
 	if m["repetitions"] == originalSet["repetitions"] {
 		t.Errorf("Expected the repetitions to change from '%v' to '%v'. Got '%v'", originalSet["repetitions"], m["repetitions"], m["repetitions"])
+	}
+
+	// the id is compared to 1.0 because JSON unmarshaling converts numbers to
+	// floats, when the target is a map[string]interface{}
+	if m["id"] != 1.0 {
+		t.Errorf("Expected set ID to be '1'. Got '%v'", m["id"])
 	}
 }
 
@@ -170,21 +174,21 @@ func TestDeleteSet(t *testing.T) {
 // utils
 
 func ensureTableExists() {
-	if _, err := a.DB.Exec(tableCreationQuery); err != nil {
+	if _, err := s.DB.Exec(tableCreationQuery); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func clearTable() {
-	a.DB.Exec("DELETE FROM sets")
-	a.DB.Exec("ALTER SEQUENCE sets_id_seq RESTART WITH 1")
+	s.DB.Exec("DELETE FROM sets")
+	s.DB.Exec("ALTER SEQUENCE sets_id_seq RESTART WITH 1")
 }
 
 const tableCreationQuery = `CREATE TABLE IF NOT EXISTS sets
 (
     id SERIAL,
     user_id TEXT NOT NULL,
-	weight NUMERIC(3,1) NOT NULL DEFAULT 0.00,
+	weight NUMERIC(10,2) NOT NULL DEFAULT 0.00,
 	exercise TEXT NOT NULL,
 	repetitions INTEGER,
 	CONSTRAINT sets_pkey PRIMARY KEY (id)
@@ -192,7 +196,7 @@ const tableCreationQuery = `CREATE TABLE IF NOT EXISTS sets
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
-	a.Router.ServeHTTP(rr, req)
+	s.Router.ServeHTTP(rr, req)
 
 	return rr
 }
@@ -209,6 +213,6 @@ func addSets(count int) {
 	}
 
 	for i := 0; i < count; i++ {
-		a.DB.Exec("INSERT INTO sets(user_id, weight, exercise, repetitions) VALUES($1, $2, $3, $4)", "User ID "+strconv.Itoa(i), (i+1.0)*10, "squat", count*2)
+		s.DB.Exec("INSERT INTO sets(user_id, weight, exercise, repetitions) VALUES($1, $2, $3, $4)", "User ID "+strconv.Itoa(i), (i+1.0)*10, "squat", count*2)
 	}
 }
