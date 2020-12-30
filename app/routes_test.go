@@ -112,7 +112,6 @@ func TestUpdateSet(t *testing.T) {
 	response := executeRequest(req)
 	var originalSet map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &originalSet)
-	log.Printf("id %s", originalSet)
 
 	var jsonStr = []byte(`{"userId":"test user updated id", "weight": 222.22, "exercise":"bench", "repetitions":15}`)
 	req, _ = http.NewRequest("PUT", "/api/v1/sets/1", bytes.NewBuffer(jsonStr))
@@ -124,7 +123,6 @@ func TestUpdateSet(t *testing.T) {
 
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
-	log.Printf("id %s", m)
 
 	if m["userId"] == originalSet["userId"] {
 		t.Errorf("Expected the userId to change from '%v' to '%v'. Got '%v'", originalSet["userId"], m["userId"], m["userId"])

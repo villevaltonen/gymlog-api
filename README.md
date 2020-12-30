@@ -1,5 +1,5 @@
 # GYMLOG-GO
-An example application for tracking workouts written in Go. The application provides REST APIs for basic user actions and managing the sets of your workout. It uses PostgreSQL as a database and the authentication is done with JWT.
+An application for tracking workouts written in Go. The application is built for learning purposes only. The application provides REST APIs for basic user actions and managing the sets of your workout. It uses PostgreSQL as a database and the authentication is done with JWT.
 
 ### Running the application or tests
 1. Start a PostgreSQL-database container with the following command: ```docker run -it -p 5432:5432 --name=postgres_go -e POSTGRES_PASSWORD=password -d postgres```
@@ -7,8 +7,5 @@ An example application for tracking workouts written in Go. The application prov
 3. Run the tests with ```go test -v``` or the app with ```go build && ./gymlog-go```
 
 ### TODO:
-- Script the testing from container setup to tearing it down
-- Finish Docker compose
 - JWT-authentication
 - REST APIs for user mgmt
-- Make DB accessible from routers in other packages

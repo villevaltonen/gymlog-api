@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	// blank to load the driver
 	_ "github.com/lib/pq"
 )
 
