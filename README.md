@@ -7,5 +7,5 @@ An application for tracking workouts written in Go. The application is built for
 3. Run the tests with ```go test -v``` or the app with ```go build && ./gymlog-go```
 
 ### TODO:
-- JWT-authentication
-- REST APIs for user mgmt
+- pick user id from jwt and add to sql queries to ensure authorization
+- REST APIs for user mgmt (create user etc.)
