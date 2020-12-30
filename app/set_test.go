@@ -1,6 +1,4 @@
-// main_test.go
-
-package main
+package app
 
 import (
 	"log"
@@ -12,11 +10,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
-
-	"github.com/villevaltonen/gymlog-go/app"
 )
 
-var s app.Server
+var s Server
 
 func TestMain(m *testing.M) {
 	s.Initialize(
