@@ -21,6 +21,13 @@ type set struct {
 
 func (s *Server) handleGetSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// auth
+		_, err := validateToken(w, r)
+		if err != nil {
+			return
+		}
+
+		// logic
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
@@ -48,6 +55,13 @@ func (s *Server) handleGetSet() http.HandlerFunc {
 
 func (s *Server) handleGetSets() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// auth
+		_, err := validateToken(w, r)
+		if err != nil {
+			return
+		}
+
+		// logic
 		var set set
 		count, _ := strconv.Atoi(r.FormValue("count"))
 		start, _ := strconv.Atoi(r.FormValue("start"))
@@ -72,6 +86,13 @@ func (s *Server) handleGetSets() http.HandlerFunc {
 
 func (s *Server) handleCreateSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// auth
+		_, err := validateToken(w, r)
+		if err != nil {
+			return
+		}
+
+		// logic
 		var set set
 		decoder := json.NewDecoder(r.Body)
 		if err := decoder.Decode(&set); err != nil {
@@ -93,6 +114,13 @@ func (s *Server) handleCreateSet() http.HandlerFunc {
 
 func (s *Server) handleUpdateSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// auth
+		_, err := validateToken(w, r)
+		if err != nil {
+			return
+		}
+
+		// logic
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
@@ -124,6 +152,13 @@ func (s *Server) handleUpdateSet() http.HandlerFunc {
 
 func (s *Server) handleDeleteSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// auth
+		_, err := validateToken(w, r)
+		if err != nil {
+			return
+		}
+
+		// logic
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
