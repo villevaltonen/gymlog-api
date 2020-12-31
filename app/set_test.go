@@ -1,33 +1,16 @@
 package app
 
 import (
-	"log"
-	"os"
+	"strconv"
 	"testing"
 
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
-	"strconv"
 )
 
-var testServer Server
-
-func TestMain(m *testing.M) {
-	testServer.Initialize(
-		os.Getenv("APP_DB_USERNAME"),
-		os.Getenv("APP_DB_PASSWORD"),
-		os.Getenv("APP_DB_NAME"))
-
-	ensureTableExists()
-	code := m.Run()
-	clearTable()
-	os.Exit(code)
-}
-
 func TestEmptyTable(t *testing.T) {
-	clearTable()
+	clearTables()
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets", nil)
 	req.AddCookie(authenticate())
@@ -41,7 +24,7 @@ func TestEmptyTable(t *testing.T) {
 }
 
 func TestGetNonExistentSet(t *testing.T) {
-	clearTable()
+	clearTables()
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/11", nil)
 	req.AddCookie(authenticate())
@@ -58,7 +41,7 @@ func TestGetNonExistentSet(t *testing.T) {
 
 func TestCreateSet(t *testing.T) {
 
-	clearTable()
+	clearTables()
 
 	var jsonStr = []byte(`{"userId":"test user id", "weight": 111.22, "exercise":"squat", "repetitions":10}`)
 	req, _ := http.NewRequest("POST", "/api/v1/sets", bytes.NewBuffer(jsonStr))
@@ -97,7 +80,7 @@ func TestCreateSet(t *testing.T) {
 }
 
 func TestGetSet(t *testing.T) {
-	clearTable()
+	clearTables()
 	addSets(1)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
@@ -109,7 +92,7 @@ func TestGetSet(t *testing.T) {
 
 func TestUpdateSet(t *testing.T) {
 
-	clearTable()
+	clearTables()
 	addSets(1)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
@@ -154,7 +137,7 @@ func TestUpdateSet(t *testing.T) {
 }
 
 func TestDeleteSet(t *testing.T) {
-	clearTable()
+	clearTables()
 	addSets(1)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
@@ -172,83 +155,6 @@ func TestDeleteSet(t *testing.T) {
 	req.AddCookie(authenticate())
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
-}
-
-func TestLogin(t *testing.T) {
-	// correct credentials
-	var jsonStr1 = []byte(`{"username":"user1", "password": "password1"}`)
-	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr1))
-	response := executeRequest(req)
-	checkResponseCode(t, http.StatusOK, response.Code)
-
-	// incorrect password
-	var jsonStr2 = []byte(`{"username":"user1", "password": "passwordnotcorrect"}`)
-	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr2))
-	response = executeRequest(req)
-	checkResponseCode(t, http.StatusUnauthorized, response.Code)
-
-	// incorrect username
-	var jsonStr3 = []byte(`{"username":"usernotfound", "password": "password1"}`)
-	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr3))
-	response = executeRequest(req)
-	checkResponseCode(t, http.StatusUnauthorized, response.Code)
-}
-
-func TestHeartbeat(t *testing.T) {
-	// without JWT
-	req1, _ := http.NewRequest("GET", "/api/heartbeat", nil)
-	response1 := executeRequest(req1)
-	checkResponseCode(t, http.StatusUnauthorized, response1.Code)
-
-	// with JWT
-	req3, _ := http.NewRequest("GET", "/api/heartbeat", nil)
-	req3.AddCookie(authenticate())
-	response3 := executeRequest(req3)
-	checkResponseCode(t, http.StatusOK, response3.Code)
-}
-
-// utils
-
-func authenticate() *http.Cookie {
-	var jsonStr = []byte(`{"username":"user1", "password": "password1"}`)
-	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr))
-	response := executeRequest(req)
-	cookie := response.Result().Cookies()[0]
-	return cookie
-}
-
-func ensureTableExists() {
-	if _, err := testServer.DB.Exec(tableCreationQuery); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func clearTable() {
-	testServer.DB.Exec("DELETE FROM sets")
-	testServer.DB.Exec("ALTER SEQUENCE sets_id_seq RESTART WITH 1")
-}
-
-const tableCreationQuery = `CREATE TABLE IF NOT EXISTS sets
-(
-    id SERIAL,
-    user_id TEXT NOT NULL,
-	weight NUMERIC(10,2) NOT NULL DEFAULT 0.00,
-	exercise TEXT NOT NULL,
-	repetitions INTEGER,
-	CONSTRAINT sets_pkey PRIMARY KEY (id)
-)`
-
-func executeRequest(req *http.Request) *httptest.ResponseRecorder {
-	rr := httptest.NewRecorder()
-	testServer.Router.ServeHTTP(rr, req)
-
-	return rr
-}
-
-func checkResponseCode(t *testing.T, expected, actual int) {
-	if expected != actual {
-		t.Errorf("Expected response code %d. Got %d\n", expected, actual)
-	}
 }
 
 func addSets(count int) {
