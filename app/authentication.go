@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
 
-// TODO: switch to env variable
-var jwtKey = []byte("my_secret_key")
+var jwtKey = []byte(os.Getenv("JWT_KEY"))
 
 var users = map[string]string{
 	"user1": "password1",

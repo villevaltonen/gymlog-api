@@ -9,6 +9,7 @@ import (
 var testServer Server
 
 func TestMain(m *testing.M) {
+	CheckEnvVariableExists("JWT_KEY")
 	testServer.Initialize(
 		os.Getenv("APP_DB_USERNAME"),
 		os.Getenv("APP_DB_PASSWORD"),

@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+	app.CheckEnvVariableExists("JWT_KEY")
 	a := app.Server{}
 	a.Initialize(
 		os.Getenv("APP_DB_USERNAME"),

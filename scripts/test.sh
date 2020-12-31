@@ -2,6 +2,7 @@
 export APP_DB_NAME=postgres
 export APP_DB_USERNAME=postgres
 export APP_DB_PASSWORD=password
+export JWT_KEY=my_secret_key
 
 # run db container
 docker stop postgres_test && docker rm postgres_test
