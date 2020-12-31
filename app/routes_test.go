@@ -12,10 +12,10 @@ import (
 	"strconv"
 )
 
-var s Server
+var testServer Server
 
 func TestMain(m *testing.M) {
-	s.Initialize(
+	testServer.Initialize(
 		os.Getenv("APP_DB_USERNAME"),
 		os.Getenv("APP_DB_PASSWORD"),
 		os.Getenv("APP_DB_NAME"))
@@ -218,14 +218,14 @@ func authenticate() *http.Cookie {
 }
 
 func ensureTableExists() {
-	if _, err := s.DB.Exec(tableCreationQuery); err != nil {
+	if _, err := testServer.DB.Exec(tableCreationQuery); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func clearTable() {
-	s.DB.Exec("DELETE FROM sets")
-	s.DB.Exec("ALTER SEQUENCE sets_id_seq RESTART WITH 1")
+	testServer.DB.Exec("DELETE FROM sets")
+	testServer.DB.Exec("ALTER SEQUENCE sets_id_seq RESTART WITH 1")
 }
 
 const tableCreationQuery = `CREATE TABLE IF NOT EXISTS sets
@@ -240,7 +240,7 @@ const tableCreationQuery = `CREATE TABLE IF NOT EXISTS sets
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
-	s.Router.ServeHTTP(rr, req)
+	testServer.Router.ServeHTTP(rr, req)
 
 	return rr
 }
@@ -257,6 +257,6 @@ func addSets(count int) {
 	}
 
 	for i := 0; i < count; i++ {
-		s.DB.Exec("INSERT INTO sets(user_id, weight, exercise, repetitions) VALUES($1, $2, $3, $4)", "User ID "+strconv.Itoa(i), (i+1.0)*10, "squat", count*2)
+		testServer.DB.Exec("INSERT INTO sets(user_id, weight, exercise, repetitions) VALUES($1, $2, $3, $4)", "User ID "+strconv.Itoa(i), (i+1.0)*10, "squat", count*2)
 	}
 }
