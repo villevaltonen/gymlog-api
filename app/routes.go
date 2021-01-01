@@ -30,7 +30,6 @@ func (s *Server) logHTTP(h http.HandlerFunc) http.HandlerFunc {
 		wrapped := statusWriter{ResponseWriter: w}
 		h.ServeHTTP(&wrapped, r)
 		log.Printf("Request: %s %s %s", r.URL.EscapedPath(), strconv.Itoa(wrapped.status), time.Since(start).String())
-		//h(w, r)
 	}
 }
 
