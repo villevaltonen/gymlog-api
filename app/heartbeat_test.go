@@ -6,6 +6,9 @@ import (
 )
 
 func TestHeartbeat(t *testing.T) {
+	clearTables()
+	createTestUsers()
+
 	// without JWT
 	req1, _ := http.NewRequest("GET", "/api/heartbeat", nil)
 	response1 := executeRequest(req1)
@@ -13,7 +16,7 @@ func TestHeartbeat(t *testing.T) {
 
 	// with JWT
 	req3, _ := http.NewRequest("GET", "/api/heartbeat", nil)
-	req3.AddCookie(authenticate())
+	req3.AddCookie(authenticate("user1", "password1"))
 	response3 := executeRequest(req3)
 	checkResponseCode(t, http.StatusOK, response3.Code)
 }

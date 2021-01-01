@@ -1,6 +1,7 @@
 package app
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -8,19 +9,17 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var jwtKey = []byte(os.Getenv("JWT_KEY"))
-
-var users = map[string]string{
-	"user1": "password1",
-	"user2": "password2",
-}
 
 // Credentials contain username and password
 type credentials struct {
 	Password string `json:"password"`
 	Username string `json:"username"`
+	UserID   string `json:"userId"`
 }
 
 // Claims is a struct, which is used in JWT cookie
@@ -39,29 +38,37 @@ func (s *Server) handleLogin() http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&creds)
 		if err != nil {
 			// invalid structure results to HTTP error
-			w.WriteHeader(http.StatusBadRequest)
-			return
+			log.Println(err.Error())
+			respondWithError(w, http.StatusBadRequest, "Can't decode credentials, check the structure")
 		}
 
-		// Get expected password from our in memory map
-		// TODO: Use database
-		expectedPassword, ok := users[creds.Username]
-
-		// If password exists for the given user
-		// AND, if it is the same as in request body, we can move ahead
-		// if NOT, return unauthorized status
-		if !ok || expectedPassword != creds.Password {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
+		// Authenticate user
+		user := creds
+		if err := user.getUserByUsername(s.DB); err != nil {
+			switch err {
+			case sql.ErrNoRows:
+				log.Println(err.Error())
+				respondWithError(w, http.StatusNotFound, "User not found")
+				return
+			default:
+				log.Println(err.Error())
+				respondWithError(w, http.StatusInternalServerError, "Internal server error")
+				return
+			}
 		}
 
-		// Declare expiration time for token
-		expirationTime := time.Now().Add(1 * time.Minute)
+		// Check password: match => continue, not match => unauthorized
+		if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password)); err != nil {
+			respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		}
+
 		// Create JWT claims, which include username and expiration time
+		expirationTime := time.Now().Add(1 * time.Minute)
 		claims := &Claims{
-			Username: creds.Username,
+			Username: user.Username,
+			UserID:   user.UserID,
 			StandardClaims: jwt.StandardClaims{
-				// in JWT, expiration time is given as unix milliseconds
+				// In JWT, expiration time is given as unix milliseconds
 				ExpiresAt: expirationTime.Unix(),
 			},
 		}
@@ -72,7 +79,8 @@ func (s *Server) handleLogin() http.HandlerFunc {
 		tokenString, err := token.SignedString(jwtKey)
 		if err != nil {
 			// In case of error, return internal server error
-			w.WriteHeader(http.StatusInternalServerError)
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 
@@ -107,7 +115,8 @@ func (s *Server) handleRefresh() http.HandlerFunc {
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		tokenString, err := token.SignedString(jwtKey)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 
@@ -117,6 +126,59 @@ func (s *Server) handleRefresh() http.HandlerFunc {
 			Value:   tokenString,
 			Expires: expirationTime,
 		})
+	}
+}
+
+func (s *Server) handleRegister() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var creds credentials
+
+		// Decode JSON body to get credentials
+		err := json.NewDecoder(r.Body).Decode(&creds)
+		if err != nil {
+			// invalid structure results to HTTP error
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// Check if username is already taken
+		exists, err := creds.checkIfUserExists(s.DB)
+		if err != nil {
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
+		if exists {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// Hash with bcrypt
+		// The second argument is the cost of hashing, which we arbitrarily set as 8 (this value can be more or less, depending on the computing power you wish to utilize)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creds.Password), 8)
+		if err != nil {
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
+
+		// Generate userID as UUID v4
+		userID, err := uuid.NewRandom()
+		if err != nil {
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
+
+		// Insert credentials into database
+		err = creds.createUser(s.DB, userID.String(), string(hashedPassword))
+		if err != nil {
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
 	}
 }
 
@@ -154,4 +216,47 @@ func validateToken(w http.ResponseWriter, r *http.Request) (*Claims, error) {
 		return claims, err
 	}
 	return claims, nil
+}
+
+func (c *credentials) createUser(db *sql.DB, userID, hashedPassword string) error {
+	_, err := db.Exec(
+		"INSERT INTO users(user_id, username, password) VALUES($1, $2, $3)",
+		userID, c.Username, hashedPassword)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *credentials) checkIfUserExists(db *sql.DB) (bool, error) {
+	rows, err := db.Query(
+		"SELECT COUNT(username) FROM users WHERE username=$1",
+		c.Username)
+	if err != nil {
+		return true, err
+	}
+	defer rows.Close()
+
+	count := 0
+
+	for rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			log.Println(err.Error())
+			return true, err
+		}
+	}
+
+	if count > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (c *credentials) getUserByUsername(db *sql.DB) error {
+	return db.QueryRow(
+		"SELECT user_id, username, password FROM users WHERE username=$1",
+		c.Username).Scan(&c.UserID, &c.Username, &c.Password)
 }

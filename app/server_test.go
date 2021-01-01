@@ -22,17 +22,24 @@ func TestMain(m *testing.M) {
 }
 
 func ensureTablesExist() {
-	if _, err := testServer.DB.Exec(tableCreationQuery); err != nil {
-		log.Fatal(err)
+	var tables []string
+	tables = append(tables, setsTableCreationQuery)
+	tables = append(tables, usersTableCreationQuery)
+
+	for _, table := range tables {
+		if _, err := testServer.DB.Exec(table); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
 func clearTables() {
 	testServer.DB.Exec("DELETE FROM sets")
+	testServer.DB.Exec("DELETE FROM users")
 	testServer.DB.Exec("ALTER SEQUENCE sets_id_seq RESTART WITH 1")
 }
 
-const tableCreationQuery = `CREATE TABLE IF NOT EXISTS sets
+const setsTableCreationQuery = `CREATE TABLE IF NOT EXISTS sets
 (
     id SERIAL,
     user_id TEXT NOT NULL,
@@ -40,4 +47,13 @@ const tableCreationQuery = `CREATE TABLE IF NOT EXISTS sets
 	exercise TEXT NOT NULL,
 	repetitions INTEGER,
 	CONSTRAINT sets_pkey PRIMARY KEY (id)
+)`
+
+const usersTableCreationQuery = `CREATE TABLE IF NOT EXISTS users
+(
+    user_id TEXT NOT NULL,
+    username TEXT NOT NULL,
+    password TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    CONSTRAINT users_pkey PRIMARY KEY (user_id)
 )`

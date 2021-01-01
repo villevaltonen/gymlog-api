@@ -12,7 +12,6 @@ func (s *Server) handleHeartbeat() http.HandlerFunc {
 			return
 		}
 
-		// Finally return welcome to the user along with the username
 		w.Write([]byte(fmt.Sprintf("OK")))
 	}
 }

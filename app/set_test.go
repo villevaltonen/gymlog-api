@@ -1,7 +1,8 @@
 package app
 
 import (
-	"strconv"
+	"log"
+	"math/rand"
 	"testing"
 
 	"bytes"
@@ -11,9 +12,10 @@ import (
 
 func TestEmptyTable(t *testing.T) {
 	clearTables()
+	createTestUsers()
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets", nil)
-	req.AddCookie(authenticate())
+	req.AddCookie(authenticate("user1", "password1"))
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
@@ -25,9 +27,10 @@ func TestEmptyTable(t *testing.T) {
 
 func TestGetNonExistentSet(t *testing.T) {
 	clearTables()
+	createTestUsers()
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/11", nil)
-	req.AddCookie(authenticate())
+	req.AddCookie(authenticate("user1", "password1"))
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusNotFound, response.Code)
@@ -39,13 +42,25 @@ func TestGetNonExistentSet(t *testing.T) {
 	}
 }
 
-func TestCreateSet(t *testing.T) {
-
+func TestGetSet(t *testing.T) {
 	clearTables()
+	userIDs := createTestUsers()
+	addSets(userIDs)
 
-	var jsonStr = []byte(`{"userId":"test user id", "weight": 111.22, "exercise":"squat", "repetitions":10}`)
+	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
+	req.AddCookie(authenticate("user1", "password1"))
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+}
+
+func TestCreateSet(t *testing.T) {
+	clearTables()
+	createTestUsers()
+
+	var jsonStr = []byte(`{"weight": 111.22, "exercise":"squat", "repetitions":10}`)
 	req, _ := http.NewRequest("POST", "/api/v1/sets", bytes.NewBuffer(jsonStr))
-	req.AddCookie(authenticate())
+	req.AddCookie(authenticate("user1", "password1"))
 	req.Header.Set("Content-Type", "application/json")
 
 	response := executeRequest(req)
@@ -53,10 +68,6 @@ func TestCreateSet(t *testing.T) {
 
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
-
-	if m["userId"] != "test user id" {
-		t.Errorf("Expected user id to be 'test user id'. Got '%v'", m["userId"])
-	}
 
 	if m["weight"] != 111.22 {
 		t.Errorf("Expected weight to be '11.22'. Got '%v'", m["weight"])
@@ -79,31 +90,20 @@ func TestCreateSet(t *testing.T) {
 	}
 }
 
-func TestGetSet(t *testing.T) {
-	clearTables()
-	addSets(1)
-
-	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
-	req.AddCookie(authenticate())
-	response := executeRequest(req)
-
-	checkResponseCode(t, http.StatusOK, response.Code)
-}
-
 func TestUpdateSet(t *testing.T) {
-
 	clearTables()
-	addSets(1)
+	userIDs := createTestUsers()
+	addSets(userIDs)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
-	req.AddCookie(authenticate())
+	req.AddCookie(authenticate("user1", "password1"))
 	response := executeRequest(req)
 	var originalSet map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &originalSet)
 
-	var jsonStr = []byte(`{"userId":"test user updated id", "weight": 222.22, "exercise":"bench", "repetitions":15}`)
+	var jsonStr = []byte(`{"weight": 222.22, "exercise":"bench", "repetitions":15}`)
 	req, _ = http.NewRequest("PUT", "/api/v1/sets/1", bytes.NewBuffer(jsonStr))
-	req.AddCookie(authenticate())
+	req.AddCookie(authenticate("user1", "password1"))
 	req.Header.Set("Content-Type", "application/json")
 
 	response = executeRequest(req)
@@ -138,31 +138,32 @@ func TestUpdateSet(t *testing.T) {
 
 func TestDeleteSet(t *testing.T) {
 	clearTables()
-	addSets(1)
+	userIDs := createTestUsers()
+	addSets(userIDs)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
-	req.AddCookie(authenticate())
+	req.AddCookie(authenticate("user1", "password1"))
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	req, _ = http.NewRequest("DELETE", "/api/v1/sets/1", nil)
-	req.AddCookie(authenticate())
+	req.AddCookie(authenticate("user1", "password1"))
 	response = executeRequest(req)
-
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	req, _ = http.NewRequest("GET", "/api/v1/sets/1", nil)
-	req.AddCookie(authenticate())
+	req.AddCookie(authenticate("user1", "password1"))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 }
 
-func addSets(count int) {
-	if count < 1 {
-		count = 1
+func addSets(userIDs []string) {
+	if len(userIDs) == 0 {
+		log.Fatal("No userIDs available")
+		return
 	}
 
-	for i := 0; i < count; i++ {
-		testServer.DB.Exec("INSERT INTO sets(user_id, weight, exercise, repetitions) VALUES($1, $2, $3, $4)", "User ID "+strconv.Itoa(i), (i+1.0)*10, "squat", count*2)
+	for _, userID := range userIDs {
+		testServer.DB.Exec("INSERT INTO sets(user_id, weight, exercise, repetitions) VALUES($1, $2, $3, $4)", userID, (rand.Intn(5)+1.0)*10, "squat", rand.Intn(5)*2)
 	}
 }

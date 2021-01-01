@@ -4,6 +4,7 @@ func (s *Server) routes() {
 	// authentication
 	s.Router.HandleFunc("/api/login", s.handleLogin()).Methods("POST")
 	s.Router.HandleFunc("/api/refresh", s.handleRefresh()).Methods("POST")
+	s.Router.HandleFunc("/api/register", s.handleRegister()).Methods("POST")
 
 	// heartbeat
 	s.Router.HandleFunc("/api/heartbeat", s.handleHeartbeat()).Methods("GET")
