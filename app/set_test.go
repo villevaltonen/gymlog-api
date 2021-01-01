@@ -54,6 +54,18 @@ func TestGetSet(t *testing.T) {
 	checkResponseCode(t, http.StatusOK, response.Code)
 }
 
+func TestGetSets(t *testing.T) {
+	clearTables()
+	userIDs := createTestUsers()
+	addSets(userIDs)
+
+	req, _ := http.NewRequest("GET", "/api/v1/sets", nil)
+	req.AddCookie(authenticate("user1", "password1"))
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+}
+
 func TestCreateSet(t *testing.T) {
 	clearTables()
 	createTestUsers()

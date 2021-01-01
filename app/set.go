@@ -200,7 +200,7 @@ func (s *set) getSets(db *sql.DB, start, count int, userID string) ([]set, error
 
 	for rows.Next() {
 		var s set
-		if err := rows.Scan(&s.ID, &s.UserID, &s.Weight, s.Exercise, s.Repetitions); err != nil {
+		if err := rows.Scan(&s.ID, &s.UserID, &s.Weight, &s.Exercise, &s.Repetitions); err != nil {
 			return nil, err
 		}
 		sets = append(sets, s)
