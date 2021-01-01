@@ -100,6 +100,7 @@ func TestCreateSet(t *testing.T) {
 	if m["id"] != 1.0 {
 		t.Errorf("Expected set ID to be '1'. Got '%v'", m["id"])
 	}
+
 }
 
 func TestUpdateSet(t *testing.T) {
