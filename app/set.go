@@ -10,7 +10,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// set is a basic entity for holding sets
 type set struct {
 	ID          int     `json:"id"`
 	UserID      string  `json:"userId"`

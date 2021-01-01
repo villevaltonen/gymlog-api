@@ -86,10 +86,13 @@ func (s *Server) handleLogin() http.HandlerFunc {
 
 		// Finally, we set the client cookie for token and use the same expiration time
 		http.SetCookie(w, &http.Cookie{
-			Name:    "token",
-			Value:   tokenString,
-			Expires: expirationTime,
+			Name:     "token",
+			Value:    tokenString,
+			Expires:  expirationTime,
+			HttpOnly: true,
 		})
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -122,9 +125,10 @@ func (s *Server) handleRefresh() http.HandlerFunc {
 
 		// Set the new token as the users `token` cookie
 		http.SetCookie(w, &http.Cookie{
-			Name:    "token",
-			Value:   tokenString,
-			Expires: expirationTime,
+			Name:     "token",
+			Value:    tokenString,
+			Expires:  expirationTime,
+			HttpOnly: true,
 		})
 	}
 }

@@ -9,5 +9,4 @@ An application for tracking workouts written in Go. The application is built for
 1. Run the tests by executing script "scripts/test.sh"
 
 ### TODO:
-- CSRF-protection (httpOnly cookie etc.)
-- improve logging
+- docker compose or similar
