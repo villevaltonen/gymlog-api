@@ -11,9 +11,10 @@ var testServer Server
 func TestMain(m *testing.M) {
 	CheckEnvVariableExists("JWT_KEY")
 	testServer.Initialize(
-		os.Getenv("APP_DB_USERNAME"),
-		os.Getenv("APP_DB_PASSWORD"),
-		os.Getenv("APP_DB_NAME"))
+		os.Getenv("DB_USERNAME"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+		os.Getenv("DB_HOST"))
 
 	ensureTablesExist()
 	code := m.Run()

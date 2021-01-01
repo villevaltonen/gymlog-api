@@ -9,4 +9,5 @@ An application for tracking workouts written in Go. The application is built for
 1. Run the tests by executing script "scripts/test.sh"
 
 ### TODO:
-- docker compose or similar
+- log http-method
+- create set accepts invalid json

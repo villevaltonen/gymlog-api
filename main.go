@@ -10,9 +10,10 @@ func main() {
 	app.CheckEnvVariableExists("JWT_KEY")
 	a := app.Server{}
 	a.Initialize(
-		os.Getenv("APP_DB_USERNAME"),
-		os.Getenv("APP_DB_PASSWORD"),
-		os.Getenv("APP_DB_NAME"))
+		os.Getenv("DB_USERNAME"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+		os.Getenv("DB_HOST"))
 
 	a.Run(":8010")
 

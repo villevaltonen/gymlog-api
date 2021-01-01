@@ -1,7 +1,8 @@
 # set env variables
-export APP_DB_NAME=postgres
-export APP_DB_USERNAME=postgres
-export APP_DB_PASSWORD=password
+export DB_NAME=postgres
+export DB_USERNAME=postgres
+export DB_PASSWORD=password
+export DB_HOST=localhost
 export JWT_KEY=my_secret_key
 
 # run db container

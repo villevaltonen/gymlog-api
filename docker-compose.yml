@@ -1,0 +1,39 @@
+version: '3.1'
+
+services:
+
+  postgres:
+    image: postgres
+    container_name: gymlog_db_compose
+    ports:
+      - "5432:5432"
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - ./scripts/postgresql/create_auth.sql:/docker-entrypoint-initdb.d/1-auth.sql
+      - ./scripts/postgresql/create_tables.sql:/docker-entrypoint-initdb.d/2-tables.sql
+    healthcheck:
+      test: "exit 0"
+      timeout: 20s
+      retries: 10
+
+  gymlog_go:
+    build: .
+    container_name: gymlog_go
+    image: gymlog_go:latest
+    depends_on:
+      - postgres
+    ports:
+      - "8010:8010"
+    expose:
+      - 8010
+    environment:
+      - DB_NAME=postgres
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=password
+      - DB_HOST=gymlog_db_compose
+      - JWT_KEY=my_secret_key
