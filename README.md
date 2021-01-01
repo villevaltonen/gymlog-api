@@ -12,4 +12,3 @@ An application for tracking workouts written in Go. The application is built for
 - CSRF-protection (httpOnly cookie etc.)
 - improve logging
 - check database rows in testing
-- getsets test
