@@ -15,7 +15,7 @@ services:
       - POSTGRES_PASSWORD=password
     volumes:
       - ./scripts/postgresql/create_auth.sql:/docker-entrypoint-initdb.d/1-auth.sql
-      - ./scripts/postgresql/create_tables.sql:/docker-entrypoint-initdb.d/2-tables.sql
+      - ./scripts/postgresql/create_sets.sql:/docker-entrypoint-initdb.d/2-tables.sql
     healthcheck:
       test: "exit 0"
       timeout: 20s

@@ -39,6 +39,7 @@ func (s *Server) handleLogin() http.HandlerFunc {
 			// invalid structure results to HTTP error
 			log.Println(err.Error())
 			respondWithError(w, http.StatusBadRequest, "Can't decode credentials, check the structure")
+			return
 		}
 
 		// Validate user input
@@ -46,6 +47,7 @@ func (s *Server) handleLogin() http.HandlerFunc {
 		if err != nil {
 			log.Printf(err.Error())
 			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
 		}
 
 		// Authenticate user
@@ -66,6 +68,7 @@ func (s *Server) handleLogin() http.HandlerFunc {
 		// Check password: match => continue, not match => unauthorized
 		if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password)); err != nil {
 			respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+			return
 		}
 
 		// Create JWT claims, which include username and expiration time
@@ -115,6 +118,7 @@ func (s *Server) handleRefresh() http.HandlerFunc {
 		if err != nil {
 			log.Printf(err.Error())
 			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
 		}
 
 		// We ensure that a new token is not issued until enough time has elapsed
@@ -163,6 +167,7 @@ func (s *Server) handleRegister() http.HandlerFunc {
 		if err != nil {
 			log.Printf(err.Error())
 			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
 		}
 
 		// Check if username is already taken

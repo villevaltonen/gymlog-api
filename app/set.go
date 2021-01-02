@@ -26,6 +26,14 @@ func (s *Server) handleGetSet() http.HandlerFunc {
 			return
 		}
 
+		// Validate claims
+		err = s.Validator.Struct(claims)
+		if err != nil {
+			log.Printf(err.Error())
+			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		// Logic
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
@@ -57,6 +65,14 @@ func (s *Server) handleGetSets() http.HandlerFunc {
 		// Auth
 		claims, err := validateToken(w, r)
 		if err != nil {
+			return
+		}
+
+		// Validate claims
+		err = s.Validator.Struct(claims)
+		if err != nil {
+			log.Printf(err.Error())
+			respondWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -96,6 +112,7 @@ func (s *Server) handleCreateSet() http.HandlerFunc {
 		if err != nil {
 			log.Printf(err.Error())
 			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
 		}
 
 		// Logic
@@ -113,6 +130,7 @@ func (s *Server) handleCreateSet() http.HandlerFunc {
 		if err != nil {
 			log.Printf(err.Error())
 			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
 		}
 
 		if err := set.createSet(s.DB, claims.UserID); err != nil {
@@ -137,6 +155,7 @@ func (s *Server) handleUpdateSet() http.HandlerFunc {
 		if err != nil {
 			log.Printf(err.Error())
 			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
 		}
 
 		// Logic
@@ -162,6 +181,7 @@ func (s *Server) handleUpdateSet() http.HandlerFunc {
 		if err != nil {
 			log.Printf(err.Error())
 			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
 		}
 
 		set.ID = id
@@ -182,6 +202,14 @@ func (s *Server) handleDeleteSet() http.HandlerFunc {
 		// Auth
 		claims, err := validateToken(w, r)
 		if err != nil {
+			return
+		}
+
+		// Validate claims
+		err = s.Validator.Struct(claims)
+		if err != nil {
+			log.Printf(err.Error())
+			respondWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
