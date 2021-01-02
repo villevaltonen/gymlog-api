@@ -13,9 +13,9 @@ import (
 type set struct {
 	ID          int     `json:"id"`
 	UserID      string  `json:"userId"`
-	Weight      float64 `json:"weight"`
-	Exercise    string  `json:"exercise"`
-	Repetitions int     `json:"repetitions"`
+	Weight      float64 `json:"weight" validate:"required"`
+	Exercise    string  `json:"exercise" validate:"required"`
+	Repetitions int     `json:"repetitions" validate:"required"`
 }
 
 func (s *Server) handleGetSet() http.HandlerFunc {
@@ -91,6 +91,13 @@ func (s *Server) handleCreateSet() http.HandlerFunc {
 			return
 		}
 
+		// validate claims
+		err = s.Validator.Struct(claims)
+		if err != nil {
+			log.Printf(err.Error())
+			respondWithError(w, http.StatusBadRequest, err.Error())
+		}
+
 		// logic
 		var set set
 		decoder := json.NewDecoder(r.Body)
@@ -100,6 +107,13 @@ func (s *Server) handleCreateSet() http.HandlerFunc {
 			return
 		}
 		defer r.Body.Close()
+
+		// validate set
+		err = s.Validator.Struct(set)
+		if err != nil {
+			log.Printf(err.Error())
+			respondWithError(w, http.StatusBadRequest, err.Error())
+		}
 
 		if err := set.createSet(s.DB, claims.UserID); err != nil {
 			log.Println(err.Error())
@@ -117,6 +131,12 @@ func (s *Server) handleUpdateSet() http.HandlerFunc {
 		claims, err := validateToken(w, r)
 		if err != nil {
 			return
+		}
+		// validate claims
+		err = s.Validator.Struct(claims)
+		if err != nil {
+			log.Printf(err.Error())
+			respondWithError(w, http.StatusBadRequest, err.Error())
 		}
 
 		// logic
@@ -136,6 +156,14 @@ func (s *Server) handleUpdateSet() http.HandlerFunc {
 			return
 		}
 		defer r.Body.Close()
+
+		// validate set
+		err = s.Validator.Struct(set)
+		if err != nil {
+			log.Printf(err.Error())
+			respondWithError(w, http.StatusBadRequest, err.Error())
+		}
+
 		set.ID = id
 
 		if err := set.updateSet(s.DB, claims.UserID); err != nil {

@@ -16,34 +16,52 @@ func TestLogin(t *testing.T) {
 	createTestUsers()
 
 	// correct credentials
-	var jsonStr1 = []byte(`{"username":"user1", "password": "password1"}`)
+	var jsonStr1 = []byte(`{"username":"user1@localhost.com", "password": "password1"}`)
 	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr1))
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	// incorrect password
-	var jsonStr2 = []byte(`{"username":"user1", "password": "passwordnotcorrect"}`)
+	var jsonStr2 = []byte(`{"username":"user1@localhost.com", "password": "passwordnotcorrect"}`)
 	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr2))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusUnauthorized, response.Code)
 
-	// incorrect username
-	var jsonStr3 = []byte(`{"username":"usernotfound", "password": "password1"}`)
+	// username not found
+	var jsonStr3 = []byte(`{"username":"usernotfound@localhost.com", "password": "password1"}`)
 	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr3))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
+
+	// incorrect username
+	var jsonStr4 = []byte(`{"username":"invalidemail", "password": "password1"}`)
+	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr4))
+	response = executeRequest(req)
+	checkResponseCode(t, http.StatusBadRequest, response.Code)
 }
 
 func TestRegister(t *testing.T) {
 	// new user
-	var jsonStr1 = []byte(`{"username":"user3", "password": "password3"}`)
+	var jsonStr1 = []byte(`{"username":"user3@localhost.com", "password": "password3"}`)
 	req, _ := http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr1))
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusCreated, response.Code)
 
 	// duplicate user
-	var jsonStr2 = []byte(`{"username":"user1", "password": "password1"}`)
+	var jsonStr2 = []byte(`{"username":"user1@localhost.com", "password": "password1"}`)
 	req, _ = http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr2))
+	response = executeRequest(req)
+	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	// incorrect username
+	var jsonStr3 = []byte(`{"username":"user3", "password": "password3"}`)
+	req, _ = http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr3))
+	response = executeRequest(req)
+	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	// missing field
+	var jsonStr4 = []byte(`{"username":"user4"}`)
+	req, _ = http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr4))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 }
@@ -57,9 +75,9 @@ func authenticate(username, password string) *http.Cookie {
 }
 
 func createTestUsers() []string {
-	var creds []credentials
-	creds = append(creds, credentials{Username: "user1", Password: "password1"})
-	creds = append(creds, credentials{Username: "user2", Password: "password2"})
+	var creds []user
+	creds = append(creds, user{Username: "user1@localhost.com", Password: "password1"})
+	creds = append(creds, user{Username: "user2@localhost.com", Password: "password2"})
 
 	var userIDs []string
 

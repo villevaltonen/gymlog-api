@@ -16,7 +16,7 @@ func TestHeartbeat(t *testing.T) {
 
 	// with JWT
 	req3, _ := http.NewRequest("GET", "/api/heartbeat", nil)
-	req3.AddCookie(authenticate("user1", "password1"))
+	req3.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response3 := executeRequest(req3)
 	checkResponseCode(t, http.StatusOK, response3.Code)
 }

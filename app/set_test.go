@@ -15,7 +15,7 @@ func TestEmptyTable(t *testing.T) {
 	createTestUsers()
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets", nil)
-	req.AddCookie(authenticate("user1", "password1"))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
@@ -30,7 +30,7 @@ func TestGetNonExistentSet(t *testing.T) {
 	createTestUsers()
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/11", nil)
-	req.AddCookie(authenticate("user1", "password1"))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusNotFound, response.Code)
@@ -48,7 +48,7 @@ func TestGetSet(t *testing.T) {
 	addSets(userIDs)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
-	req.AddCookie(authenticate("user1", "password1"))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
@@ -60,7 +60,7 @@ func TestGetSets(t *testing.T) {
 	addSets(userIDs)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets", nil)
-	req.AddCookie(authenticate("user1", "password1"))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
@@ -70,9 +70,10 @@ func TestCreateSet(t *testing.T) {
 	clearTables()
 	createTestUsers()
 
-	var jsonStr = []byte(`{"weight": 111.22, "exercise":"squat", "repetitions":10}`)
-	req, _ := http.NewRequest("POST", "/api/v1/sets", bytes.NewBuffer(jsonStr))
-	req.AddCookie(authenticate("user1", "password1"))
+	// valid request
+	var jsonStr1 = []byte(`{"weight": 111.22, "exercise":"squat", "repetitions":10}`)
+	req, _ := http.NewRequest("POST", "/api/v1/sets", bytes.NewBuffer(jsonStr1))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	req.Header.Set("Content-Type", "application/json")
 
 	response := executeRequest(req)
@@ -101,6 +102,14 @@ func TestCreateSet(t *testing.T) {
 		t.Errorf("Expected set ID to be '1'. Got '%v'", m["id"])
 	}
 
+	// invalid request
+	var jsonStr2 = []byte(`{"exercise":"squat", "repetitions":10}`)
+	req, _ = http.NewRequest("POST", "/api/v1/sets", bytes.NewBuffer(jsonStr2))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
+	req.Header.Set("Content-Type", "application/json")
+
+	response = executeRequest(req)
+	checkResponseCode(t, http.StatusBadRequest, response.Code)
 }
 
 func TestUpdateSet(t *testing.T) {
@@ -109,14 +118,14 @@ func TestUpdateSet(t *testing.T) {
 	addSets(userIDs)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
-	req.AddCookie(authenticate("user1", "password1"))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response := executeRequest(req)
 	var originalSet map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &originalSet)
 
 	var jsonStr = []byte(`{"weight": 222.22, "exercise":"bench", "repetitions":15}`)
 	req, _ = http.NewRequest("PUT", "/api/v1/sets/1", bytes.NewBuffer(jsonStr))
-	req.AddCookie(authenticate("user1", "password1"))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	req.Header.Set("Content-Type", "application/json")
 
 	response = executeRequest(req)
@@ -147,6 +156,15 @@ func TestUpdateSet(t *testing.T) {
 	if m["id"] != 1.0 {
 		t.Errorf("Expected set ID to be '1'. Got '%v'", m["id"])
 	}
+
+	// invalid request
+	var jsonStr2 = []byte(`{"exercise":"squat", "repetitions":10}`)
+	req, _ = http.NewRequest("PUT", "/api/v1/sets/1", bytes.NewBuffer(jsonStr2))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
+	req.Header.Set("Content-Type", "application/json")
+
+	response = executeRequest(req)
+	checkResponseCode(t, http.StatusBadRequest, response.Code)
 }
 
 func TestDeleteSet(t *testing.T) {
@@ -155,17 +173,17 @@ func TestDeleteSet(t *testing.T) {
 	addSets(userIDs)
 
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
-	req.AddCookie(authenticate("user1", "password1"))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	req, _ = http.NewRequest("DELETE", "/api/v1/sets/1", nil)
-	req.AddCookie(authenticate("user1", "password1"))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	req, _ = http.NewRequest("GET", "/api/v1/sets/1", nil)
-	req.AddCookie(authenticate("user1", "password1"))
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 }

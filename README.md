@@ -7,7 +7,3 @@ An application for tracking workouts written in Go. The application is built for
 
 ### Testing the application
 1. Run the tests by executing script "scripts/test.sh"
-
-### TODO:
-- create set and create user accepts invalid json
-    - golang validator?
