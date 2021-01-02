@@ -18,6 +18,13 @@ type set struct {
 	Repetitions int     `json:"repetitions" validate:"required"`
 }
 
+type sets struct {
+	Results int   `json:"results"`
+	Skip    int   `json:"skip"`
+	Limit   int   `json:"limit"`
+	Sets    []set `json:"sets"`
+}
+
 func (s *Server) handleGetSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Auth
@@ -78,23 +85,26 @@ func (s *Server) handleGetSets() http.HandlerFunc {
 
 		// Logic
 		var set set
-		count, _ := strconv.Atoi(r.FormValue("count"))
-		start, _ := strconv.Atoi(r.FormValue("start"))
+		skip, _ := strconv.Atoi(r.FormValue("skip"))
+		limit, _ := strconv.Atoi(r.FormValue("limit"))
 
-		if count > 10 || count < 1 {
-			count = 10
+		if limit > 10 || limit < 1 {
+			limit = 10
 		}
-		if start < 0 {
-			start = 0
+		if skip < 0 {
+			skip = 0
 		}
 
-		sets, err := set.getSets(s.DB, start, count, claims.UserID)
+		sets := sets{Skip: skip, Limit: limit}
+		result, err := set.getSets(s.DB, skip, limit, claims.UserID)
 		if err != nil {
 			log.Println(err.Error())
 			respondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 
+		sets.Sets = result
+		sets.Results = len(result)
 		respondWithJSON(w, http.StatusOK, sets)
 	}
 }

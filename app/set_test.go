@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"testing"
@@ -20,8 +21,26 @@ func TestEmptyTable(t *testing.T) {
 
 	checkResponseCode(t, http.StatusOK, response.Code)
 
-	if body := response.Body.String(); body != "[]" {
-		t.Errorf("Expected an empty array. Got %s", body)
+	var m map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &m)
+
+	// Numbers are compared to floats because JSON unmarshaling converts numbers to
+	// floats, when the target is a map[string]interface{}
+	if m["results"] != 0.0 {
+		t.Errorf("Expected results to be '0'. Got '%v'", m["results"])
+	}
+
+	if m["skip"] != 0.0 {
+		t.Errorf("Expected skip to be '0'. Got '%v'", m["skip"])
+	}
+
+	if m["limit"] != 10.0 {
+		t.Errorf("Expected limit to be '10'. Got '%v'", m["limit"])
+	}
+
+	sets := fmt.Sprintf("%v", m["sets"])
+	if sets != "[]" {
+		t.Errorf("Expected an empty array. Got %s", sets)
 	}
 }
 
@@ -90,14 +109,12 @@ func TestCreateSet(t *testing.T) {
 		t.Errorf("Expected exercise to be 'squat'. Got '%v'", m["exercise"])
 	}
 
-	// Repetitions is compared to 10.0 because JSON unmarshaling converts numbers to
+	// Numbers are compared to floats because JSON unmarshaling converts numbers to
 	// floats, when the target is a map[string]interface{}
 	if m["repetitions"] != 10.0 {
 		t.Errorf("Expected repetitions to be '10'. Got '%v'", m["repetitions"])
 	}
 
-	// The id is compared to 1.0 because JSON unmarshaling converts numbers to
-	// floats, when the target is a map[string]interface{}
 	if m["id"] != 1.0 {
 		t.Errorf("Expected set ID to be '1'. Got '%v'", m["id"])
 	}
@@ -151,7 +168,7 @@ func TestUpdateSet(t *testing.T) {
 		t.Errorf("Expected the repetitions to change from '%v' to '%v'. Got '%v'", originalSet["repetitions"], m["repetitions"], m["repetitions"])
 	}
 
-	// The id is compared to 1.0 because JSON unmarshaling converts numbers to
+	// Numbers are compared to floats because JSON unmarshaling converts numbers to
 	// floats, when the target is a map[string]interface{}
 	if m["id"] != 1.0 {
 		t.Errorf("Expected set ID to be '1'. Got '%v'", m["id"])

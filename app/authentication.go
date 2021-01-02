@@ -101,7 +101,7 @@ func (s *Server) handleLogin() http.HandlerFunc {
 			HttpOnly: true,
 		})
 
-		w.WriteHeader(http.StatusOK)
+		respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 	}
 }
 
@@ -147,6 +147,8 @@ func (s *Server) handleRefresh() http.HandlerFunc {
 			Expires:  expirationTime,
 			HttpOnly: true,
 		})
+
+		respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 	}
 }
 
@@ -178,7 +180,7 @@ func (s *Server) handleRegister() http.HandlerFunc {
 			return
 		}
 		if exists {
-			w.WriteHeader(http.StatusBadRequest)
+			respondWithError(w, http.StatusBadRequest, "User already exists")
 			return
 		}
 
@@ -207,7 +209,7 @@ func (s *Server) handleRegister() http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		respondWithJSON(w, http.StatusCreated, map[string]string{"result": "success"})
 	}
 }
 
