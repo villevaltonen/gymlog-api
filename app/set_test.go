@@ -189,16 +189,31 @@ func TestDeleteSet(t *testing.T) {
 	userIDs := createTestUsers()
 	addSets(userIDs)
 
+	// Check that a set with id 1 exists
 	req, _ := http.NewRequest("GET", "/api/v1/sets/1", nil)
 	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
+	// Try to delete set with other user
+	req, _ = http.NewRequest("DELETE", "/api/v1/sets/1", nil)
+	req.AddCookie(authenticate("user2@localhost.com", "password2"))
+	response = executeRequest(req)
+	checkResponseCode(t, http.StatusNotFound, response.Code)
+
+	// Check that a set with id 1 still exists
+	req, _ = http.NewRequest("GET", "/api/v1/sets/1", nil)
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
+	response = executeRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	// Delete set with correct user
 	req, _ = http.NewRequest("DELETE", "/api/v1/sets/1", nil)
 	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
+	// Check that set has been deleted
 	req, _ = http.NewRequest("GET", "/api/v1/sets/1", nil)
 	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response = executeRequest(req)

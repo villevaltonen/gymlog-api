@@ -233,12 +233,17 @@ func (s *Server) handleDeleteSet() http.HandlerFunc {
 		}
 
 		set := set{ID: id}
-		if err := set.deleteSet(s.DB, claims.UserID); err != nil {
+		affectedRows, err := set.deleteSet(s.DB, claims.UserID)
+		if err != nil {
 			log.Println(err.Error())
 			respondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 
+		if affectedRows == 0 {
+			respondWithError(w, http.StatusNotFound, "Not found")
+			return
+		}
 		respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 	}
 }
@@ -280,10 +285,18 @@ func (s *set) updateSet(db *sql.DB, userID string) error {
 	return err
 }
 
-func (s *set) deleteSet(db *sql.DB, userID string) error {
-	_, err := db.Exec("DELETE FROM sets WHERE id=$1 and user_id=$2", s.ID, userID)
+func (s *set) deleteSet(db *sql.DB, userID string) (int64, error) {
+	result, err := db.Exec("DELETE FROM sets WHERE id=$1 and user_id=$2", s.ID, userID)
+	if err != nil {
+		return 0, err
+	}
 
-	return err
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return affected, err
 }
 
 func (s *set) createSet(db *sql.DB, userID string) error {
