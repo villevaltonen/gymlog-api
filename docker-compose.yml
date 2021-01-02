@@ -23,7 +23,7 @@ services:
 
   gymlog_go:
     build: .
-    container_name: gymlog_go
+    container_name: gymlog_go_compose
     image: gymlog_go:latest
     depends_on:
       - postgres
