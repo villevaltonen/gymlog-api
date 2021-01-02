@@ -20,13 +20,13 @@ type set struct {
 
 func (s *Server) handleGetSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// auth
+		// Auth
 		claims, err := validateToken(w, r)
 		if err != nil {
 			return
 		}
 
-		// logic
+		// Logic
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
@@ -54,13 +54,13 @@ func (s *Server) handleGetSet() http.HandlerFunc {
 
 func (s *Server) handleGetSets() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// auth
+		// Auth
 		claims, err := validateToken(w, r)
 		if err != nil {
 			return
 		}
 
-		// logic
+		// Logic
 		var set set
 		count, _ := strconv.Atoi(r.FormValue("count"))
 		start, _ := strconv.Atoi(r.FormValue("start"))
@@ -85,20 +85,20 @@ func (s *Server) handleGetSets() http.HandlerFunc {
 
 func (s *Server) handleCreateSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// auth
+		// Auth
 		claims, err := validateToken(w, r)
 		if err != nil {
 			return
 		}
 
-		// validate claims
+		// Validate claims
 		err = s.Validator.Struct(claims)
 		if err != nil {
 			log.Printf(err.Error())
 			respondWithError(w, http.StatusBadRequest, err.Error())
 		}
 
-		// logic
+		// Logic
 		var set set
 		decoder := json.NewDecoder(r.Body)
 		if err := decoder.Decode(&set); err != nil {
@@ -108,7 +108,7 @@ func (s *Server) handleCreateSet() http.HandlerFunc {
 		}
 		defer r.Body.Close()
 
-		// validate set
+		// Validate set
 		err = s.Validator.Struct(set)
 		if err != nil {
 			log.Printf(err.Error())
@@ -127,19 +127,19 @@ func (s *Server) handleCreateSet() http.HandlerFunc {
 
 func (s *Server) handleUpdateSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// auth
+		// Auth
 		claims, err := validateToken(w, r)
 		if err != nil {
 			return
 		}
-		// validate claims
+		// Validate claims
 		err = s.Validator.Struct(claims)
 		if err != nil {
 			log.Printf(err.Error())
 			respondWithError(w, http.StatusBadRequest, err.Error())
 		}
 
-		// logic
+		// Logic
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
@@ -157,7 +157,7 @@ func (s *Server) handleUpdateSet() http.HandlerFunc {
 		}
 		defer r.Body.Close()
 
-		// validate set
+		// Validate set
 		err = s.Validator.Struct(set)
 		if err != nil {
 			log.Printf(err.Error())
@@ -179,13 +179,13 @@ func (s *Server) handleUpdateSet() http.HandlerFunc {
 
 func (s *Server) handleDeleteSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// auth
+		// Auth
 		claims, err := validateToken(w, r)
 		if err != nil {
 			return
 		}
 
-		// logic
+		// Logic
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
@@ -205,13 +205,11 @@ func (s *Server) handleDeleteSet() http.HandlerFunc {
 	}
 }
 
-// getSet fetches a set from database with id
 func (s *set) getSet(db *sql.DB, userID string) error {
 	return db.QueryRow("SELECT user_id, weight, exercise, repetitions FROM sets WHERE id=$1 AND user_id=$2",
 		s.ID, userID).Scan(&s.UserID, &s.Weight, &s.Exercise, &s.Repetitions)
 }
 
-// getSets fetches multiple sets from database with user id
 func (s *set) getSets(db *sql.DB, start, count int, userID string) ([]set, error) {
 	rows, err := db.Query(
 		"SELECT id, user_id, weight, exercise, repetitions FROM sets WHERE user_id=$1 LIMIT $2 OFFSET $3",
@@ -236,7 +234,6 @@ func (s *set) getSets(db *sql.DB, start, count int, userID string) ([]set, error
 	return sets, nil
 }
 
-// updateSet executes update query to database
 func (s *set) updateSet(db *sql.DB, userID string) error {
 	_, err :=
 		db.Exec("UPDATE sets SET user_id=$2, weight=$3, exercise=$4, repetitions=$5 WHERE id=$1 AND user_id=$2",
@@ -245,14 +242,12 @@ func (s *set) updateSet(db *sql.DB, userID string) error {
 	return err
 }
 
-// deleteSet deletes a set from database with
 func (s *set) deleteSet(db *sql.DB, userID string) error {
 	_, err := db.Exec("DELETE FROM sets WHERE id=$1 and user_id=$2", s.ID, userID)
 
 	return err
 }
 
-// createSet creates a set into database with given JSON
 func (s *set) createSet(db *sql.DB, userID string) error {
 	err := db.QueryRow(
 		"INSERT INTO sets(user_id, weight, exercise, repetitions) VALUES($1, $2, $3, $4) RETURNING id",

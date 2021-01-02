@@ -15,25 +15,25 @@ func TestLogin(t *testing.T) {
 	clearTables()
 	createTestUsers()
 
-	// correct credentials
+	// Correct credentials
 	var jsonStr1 = []byte(`{"username":"user1@localhost.com", "password": "password1"}`)
 	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr1))
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
-	// incorrect password
+	// Incorrect password
 	var jsonStr2 = []byte(`{"username":"user1@localhost.com", "password": "passwordnotcorrect"}`)
 	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr2))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusUnauthorized, response.Code)
 
-	// username not found
+	// Username not found
 	var jsonStr3 = []byte(`{"username":"usernotfound@localhost.com", "password": "password1"}`)
 	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr3))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 
-	// incorrect username
+	// Incorrect username
 	var jsonStr4 = []byte(`{"username":"invalidemail", "password": "password1"}`)
 	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr4))
 	response = executeRequest(req)
@@ -41,25 +41,25 @@ func TestLogin(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
-	// new user
+	// New user
 	var jsonStr1 = []byte(`{"username":"user3@localhost.com", "password": "password3"}`)
 	req, _ := http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr1))
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusCreated, response.Code)
 
-	// duplicate user
+	// Duplicate user
 	var jsonStr2 = []byte(`{"username":"user1@localhost.com", "password": "password1"}`)
 	req, _ = http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr2))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 
-	// incorrect username
+	// Incorrect username
 	var jsonStr3 = []byte(`{"username":"user3", "password": "password3"}`)
 	req, _ = http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr3))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 
-	// missing field
+	// Missing field
 	var jsonStr4 = []byte(`{"username":"user4"}`)
 	req, _ = http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr4))
 	response = executeRequest(req)

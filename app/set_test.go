@@ -70,7 +70,7 @@ func TestCreateSet(t *testing.T) {
 	clearTables()
 	createTestUsers()
 
-	// valid request
+	// Valid request
 	var jsonStr1 = []byte(`{"weight": 111.22, "exercise":"squat", "repetitions":10}`)
 	req, _ := http.NewRequest("POST", "/api/v1/sets", bytes.NewBuffer(jsonStr1))
 	req.AddCookie(authenticate("user1@localhost.com", "password1"))
@@ -90,19 +90,19 @@ func TestCreateSet(t *testing.T) {
 		t.Errorf("Expected exercise to be 'squat'. Got '%v'", m["exercise"])
 	}
 
-	// repetitions is compared to 10.0 because JSON unmarshaling converts numbers to
+	// Repetitions is compared to 10.0 because JSON unmarshaling converts numbers to
 	// floats, when the target is a map[string]interface{}
 	if m["repetitions"] != 10.0 {
 		t.Errorf("Expected repetitions to be '10'. Got '%v'", m["repetitions"])
 	}
 
-	// the id is compared to 1.0 because JSON unmarshaling converts numbers to
+	// The id is compared to 1.0 because JSON unmarshaling converts numbers to
 	// floats, when the target is a map[string]interface{}
 	if m["id"] != 1.0 {
 		t.Errorf("Expected set ID to be '1'. Got '%v'", m["id"])
 	}
 
-	// invalid request
+	// Invalid request
 	var jsonStr2 = []byte(`{"exercise":"squat", "repetitions":10}`)
 	req, _ = http.NewRequest("POST", "/api/v1/sets", bytes.NewBuffer(jsonStr2))
 	req.AddCookie(authenticate("user1@localhost.com", "password1"))
@@ -151,13 +151,13 @@ func TestUpdateSet(t *testing.T) {
 		t.Errorf("Expected the repetitions to change from '%v' to '%v'. Got '%v'", originalSet["repetitions"], m["repetitions"], m["repetitions"])
 	}
 
-	// the id is compared to 1.0 because JSON unmarshaling converts numbers to
+	// The id is compared to 1.0 because JSON unmarshaling converts numbers to
 	// floats, when the target is a map[string]interface{}
 	if m["id"] != 1.0 {
 		t.Errorf("Expected set ID to be '1'. Got '%v'", m["id"])
 	}
 
-	// invalid request
+	// Invalid request
 	var jsonStr2 = []byte(`{"exercise":"squat", "repetitions":10}`)
 	req, _ = http.NewRequest("PUT", "/api/v1/sets/1", bytes.NewBuffer(jsonStr2))
 	req.AddCookie(authenticate("user1@localhost.com", "password1"))

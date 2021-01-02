@@ -12,7 +12,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 
-	// blank to load the driver
+	// Blank to load the driver
 	_ "github.com/lib/pq"
 )
 
@@ -25,7 +25,7 @@ type Server struct {
 
 // Initialize initializes the app
 func (s *Server) Initialize(user, password, dbname, dbhost string) {
-	// db connection
+	// DB connection
 	connectionString :=
 		fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", dbhost, user, password, dbname)
 	var err error
@@ -34,9 +34,9 @@ func (s *Server) Initialize(user, password, dbname, dbhost string) {
 		log.Fatal(err)
 	}
 
-	// validator
+	// Validator
 	s.Validator = validator.New()
-	// register function to get tag name from json tags.
+	// Register function to get tag name from json tags.
 	s.Validator.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
 		if name == "-" {
@@ -45,7 +45,7 @@ func (s *Server) Initialize(user, password, dbname, dbhost string) {
 		return name
 	})
 
-	// router
+	// Router
 	s.Router = mux.NewRouter()
 	s.routes()
 }

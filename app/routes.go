@@ -8,15 +8,15 @@ import (
 )
 
 func (s *Server) routes() {
-	// authentication
+	// Authentication
 	s.Router.HandleFunc("/api/login", s.logHTTP(s.handleLogin())).Methods("POST")
 	s.Router.HandleFunc("/api/refresh", s.logHTTP(s.handleRefresh())).Methods("POST")
 	s.Router.HandleFunc("/api/register", s.logHTTP(s.handleRegister())).Methods("POST")
 
-	// heartbeat
+	// Heartbeat
 	s.Router.HandleFunc("/api/heartbeat", s.logHTTP(s.handleHeartbeat())).Methods("GET")
 
-	// manage sets
+	// Manage sets
 	s.Router.HandleFunc("/api/v1/sets", s.logHTTP(s.handleGetSets())).Methods("GET")
 	s.Router.HandleFunc("/api/v1/sets", s.logHTTP(s.handleCreateSet())).Methods("POST")
 	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.logHTTP(s.handleGetSet())).Methods("GET")
