@@ -19,7 +19,6 @@ func TestEmptyTable(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/api/v1/sets", nil)
 	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response := executeRequest(req)
-
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	var m map[string]interface{}

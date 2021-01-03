@@ -30,17 +30,11 @@ type sets struct {
 
 func (s *Server) handleGetSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Auth
-		claims, err := validateToken(w, r)
+		// Get user information
+		claims, err := parseTokenCookie(w, r)
 		if err != nil {
-			return
-		}
-
-		// Validate claims
-		err = s.Validator.Struct(claims)
-		if err != nil {
-			log.Printf(err.Error())
-			respondWithError(w, http.StatusBadRequest, err.Error())
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 
@@ -72,20 +66,15 @@ func (s *Server) handleGetSet() http.HandlerFunc {
 
 func (s *Server) handleGetSets() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Auth
-		claims, err := validateToken(w, r)
+		// Get user information
+		claims, err := parseTokenCookie(w, r)
 		if err != nil {
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 
-		// Validate claims
-		err = s.Validator.Struct(claims)
-		if err != nil {
-			log.Printf(err.Error())
-			respondWithError(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
+		log.Printf("FOOO %s", claims.UserID)
 		// Logic
 		var set set
 		skip, _ := strconv.Atoi(r.FormValue("skip"))
@@ -114,17 +103,11 @@ func (s *Server) handleGetSets() http.HandlerFunc {
 
 func (s *Server) handleCreateSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Auth
-		claims, err := validateToken(w, r)
+		// Get user information
+		claims, err := parseTokenCookie(w, r)
 		if err != nil {
-			return
-		}
-
-		// Validate claims
-		err = s.Validator.Struct(claims)
-		if err != nil {
-			log.Printf(err.Error())
-			respondWithError(w, http.StatusBadRequest, err.Error())
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 
@@ -158,16 +141,11 @@ func (s *Server) handleCreateSet() http.HandlerFunc {
 
 func (s *Server) handleUpdateSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Auth
-		claims, err := validateToken(w, r)
+		// Get user information
+		claims, err := parseTokenCookie(w, r)
 		if err != nil {
-			return
-		}
-		// Validate claims
-		err = s.Validator.Struct(claims)
-		if err != nil {
-			log.Printf(err.Error())
-			respondWithError(w, http.StatusBadRequest, err.Error())
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 
@@ -212,17 +190,11 @@ func (s *Server) handleUpdateSet() http.HandlerFunc {
 
 func (s *Server) handleDeleteSet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Auth
-		claims, err := validateToken(w, r)
+		// Get user information
+		claims, err := parseTokenCookie(w, r)
 		if err != nil {
-			return
-		}
-
-		// Validate claims
-		err = s.Validator.Struct(claims)
-		if err != nil {
-			log.Printf(err.Error())
-			respondWithError(w, http.StatusBadRequest, err.Error())
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 
@@ -258,7 +230,7 @@ func (s *set) getSet(db *sql.DB, userID string) error {
 
 func (s *set) getSets(db *sql.DB, start, count int, userID string) ([]set, error) {
 	rows, err := db.Query(
-		"SELECT id, user_id, weight, exercise, repetitions, created, modified FROM sets WHERE user_id=$1 LIMIT $2 OFFSET $3",
+		"SELECT id, user_id, weight, exercise, repetitions, created, modified FROM sets WHERE user_id=$1 ORDER BY created DESC LIMIT $2 OFFSET $3",
 		userID, count, start)
 	if err != nil {
 		return nil, err

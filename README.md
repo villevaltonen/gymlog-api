@@ -6,7 +6,3 @@ An application for tracking workouts written in Go. The application is built for
 
 ### Testing the application
 1. Run the tests by executing script "scripts/test.sh" (the application runs locally, the database in a container)
-
-### TODO
-- add timestamp to sets (add on create, modified on update, show in get)
-- check logging url etc. for failing requests

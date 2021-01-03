@@ -21,7 +21,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 
 // CheckEnvVariableExists is meant as a fail-safe mechanism for required environment variables. Panics if given environment variable is not present.
 func CheckEnvVariableExists(name string) {
-	if key := len(os.Getenv(name)); key <= 0 {
+	if variable := len(os.Getenv(name)); variable <= 0 {
 		log.Panicf("%s not set", name)
 	}
 }

@@ -107,17 +107,11 @@ func (s *Server) handleLogin() http.HandlerFunc {
 
 func (s *Server) handleRefresh() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Validate token
-		claims, err := validateToken(w, r)
+		// Parse claims for user information
+		claims, err := parseTokenCookie(w, r)
 		if err != nil {
-			return
-		}
-
-		// Validate claims
-		err = s.Validator.Struct(claims)
-		if err != nil {
-			log.Printf(err.Error())
-			respondWithError(w, http.StatusBadRequest, err.Error())
+			log.Println(err.Error())
+			respondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
 
@@ -213,37 +207,21 @@ func (s *Server) handleRegister() http.HandlerFunc {
 	}
 }
 
-func validateToken(w http.ResponseWriter, r *http.Request) (*Claims, error) {
+func parseTokenCookie(w http.ResponseWriter, r *http.Request) (*Claims, error) {
 	claims := &Claims{}
-
-	// Check that cookie is present
 	c, err := r.Cookie("token")
 	if err != nil {
-		if err == http.ErrNoCookie {
-			log.Println("No cookie present")
-			w.WriteHeader(http.StatusUnauthorized)
-			return claims, err
-		}
-		w.WriteHeader(http.StatusBadRequest)
+		log.Println(err.Error())
+		respondWithError(w, http.StatusBadRequest, "Invalid token")
 		return claims, err
 	}
 
-	// Validate token
-	tkn, err := jwt.ParseWithClaims(c.Value, claims, func(token *jwt.Token) (interface{}, error) {
+	_, err = jwt.ParseWithClaims(c.Value, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
 	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			log.Println("Err sign invalid")
-			w.WriteHeader(http.StatusUnauthorized)
-			return claims, err
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		return claims, err
-	}
-	if !tkn.Valid {
-		log.Println("token invalid")
-		w.WriteHeader(http.StatusUnauthorized)
+		log.Println(err.Error())
+		respondWithError(w, http.StatusBadRequest, "Invalid token")
 		return claims, err
 	}
 	return claims, nil
