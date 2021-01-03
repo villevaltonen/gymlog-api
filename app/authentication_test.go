@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -91,7 +92,12 @@ func createTestUsers() []string {
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		testServer.DB.Exec("INSERT INTO users(user_id, username, password, enabled) VALUES($1, $2, $3, 1)", userID.String(), credential.Username, hashedPassword)
+		current := time.Now()
+		_, err = testServer.DB.Exec("INSERT INTO users(user_id, username, password, enabled, created, modified) VALUES($1, $2, $3, 1, $4, $5)", userID.String(), credential.Username, hashedPassword, current, current)
+		if err != nil {
+			log.Fatal(err.Error())
+			break
+		}
 		userIDs = append(userIDs, userID.String())
 	}
 

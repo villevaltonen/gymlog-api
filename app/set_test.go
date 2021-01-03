@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"testing"
+	"time"
 
 	"bytes"
 	"encoding/json"
@@ -226,7 +227,12 @@ func addSets(userIDs []string) {
 		return
 	}
 
+	current := time.Now()
 	for _, userID := range userIDs {
-		testServer.DB.Exec("INSERT INTO sets(user_id, weight, exercise, repetitions) VALUES($1, $2, $3, $4)", userID, (rand.Intn(5)+1.0)*10, "squat", rand.Intn(5)*2)
+		_, err := testServer.DB.Exec("INSERT INTO sets(user_id, weight, exercise, repetitions, created, modified) VALUES($1, $2, $3, $4, $5, $6)", userID, (rand.Intn(5)+1.0)*10, "squat", rand.Intn(5)*2, current, current)
+		if err != nil {
+			log.Fatal(err.Error())
+			break
+		}
 	}
 }

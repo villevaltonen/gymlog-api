@@ -47,6 +47,8 @@ const setsTableCreationQuery = `CREATE TABLE IF NOT EXISTS sets
 	weight NUMERIC(10,2) NOT NULL DEFAULT 0.00,
 	exercise TEXT NOT NULL,
 	repetitions INTEGER,
+	created TIMESTAMP WITH TIME ZONE NOT NULL,
+    modified TIMESTAMP WITH TIME ZONE NOT NULL,
 	CONSTRAINT sets_pkey PRIMARY KEY (id)
 )`
 
@@ -55,6 +57,8 @@ const usersTableCreationQuery = `CREATE TABLE IF NOT EXISTS users
     user_id TEXT NOT NULL,
     username TEXT NOT NULL,
     password TEXT NOT NULL,
-    enabled INTEGER NOT NULL DEFAULT 1,
+	enabled INTEGER NOT NULL DEFAULT 1,
+	created TIMESTAMP WITH TIME ZONE NOT NULL,
+    modified TIMESTAMP WITH TIME ZONE NOT NULL,
     CONSTRAINT users_pkey PRIMARY KEY (user_id)
 )`

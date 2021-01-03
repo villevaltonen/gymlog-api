@@ -250,9 +250,10 @@ func validateToken(w http.ResponseWriter, r *http.Request) (*Claims, error) {
 }
 
 func (c *user) createUser(db *sql.DB, userID, hashedPassword string) error {
+	current := time.Now()
 	_, err := db.Exec(
-		"INSERT INTO users(user_id, username, password) VALUES($1, $2, $3)",
-		userID, c.Username, hashedPassword)
+		"INSERT INTO users(user_id, username, password, created, modified) VALUES($1, $2, $3, $4, $5)",
+		userID, c.Username, hashedPassword, current, current)
 
 	if err != nil {
 		return err

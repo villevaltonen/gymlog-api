@@ -6,16 +6,19 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
 
 type set struct {
-	ID          int     `json:"id"`
-	UserID      string  `json:"userId"`
-	Weight      float64 `json:"weight" validate:"required"`
-	Exercise    string  `json:"exercise" validate:"required"`
-	Repetitions int     `json:"repetitions" validate:"required"`
+	ID          int       `json:"id"`
+	UserID      string    `json:"userId"`
+	Weight      float64   `json:"weight" validate:"required"`
+	Exercise    string    `json:"exercise" validate:"required"`
+	Repetitions int       `json:"repetitions" validate:"required"`
+	Created     time.Time `json:"created"`
+	Modified    time.Time `json:"modified"`
 }
 
 type sets struct {
@@ -249,26 +252,23 @@ func (s *Server) handleDeleteSet() http.HandlerFunc {
 }
 
 func (s *set) getSet(db *sql.DB, userID string) error {
-	return db.QueryRow("SELECT user_id, weight, exercise, repetitions FROM sets WHERE id=$1 AND user_id=$2",
-		s.ID, userID).Scan(&s.UserID, &s.Weight, &s.Exercise, &s.Repetitions)
+	return db.QueryRow("SELECT user_id, weight, exercise, repetitions, created, modified FROM sets WHERE id=$1 AND user_id=$2",
+		s.ID, userID).Scan(&s.UserID, &s.Weight, &s.Exercise, &s.Repetitions, &s.Created, &s.Modified)
 }
 
 func (s *set) getSets(db *sql.DB, start, count int, userID string) ([]set, error) {
 	rows, err := db.Query(
-		"SELECT id, user_id, weight, exercise, repetitions FROM sets WHERE user_id=$1 LIMIT $2 OFFSET $3",
+		"SELECT id, user_id, weight, exercise, repetitions, created, modified FROM sets WHERE user_id=$1 LIMIT $2 OFFSET $3",
 		userID, count, start)
-
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 
 	sets := []set{}
-
 	for rows.Next() {
 		var s set
-		if err := rows.Scan(&s.ID, &s.UserID, &s.Weight, &s.Exercise, &s.Repetitions); err != nil {
+		if err := rows.Scan(&s.ID, &s.UserID, &s.Weight, &s.Exercise, &s.Repetitions, &s.Created, &s.Modified); err != nil {
 			return nil, err
 		}
 		sets = append(sets, s)
@@ -279,8 +279,8 @@ func (s *set) getSets(db *sql.DB, start, count int, userID string) ([]set, error
 
 func (s *set) updateSet(db *sql.DB, userID string) error {
 	_, err :=
-		db.Exec("UPDATE sets SET user_id=$2, weight=$3, exercise=$4, repetitions=$5 WHERE id=$1 AND user_id=$2",
-			s.ID, userID, s.Weight, s.Exercise, s.Repetitions)
+		db.Exec("UPDATE sets SET weight=$3, exercise=$4, repetitions=$5, modified=$6 WHERE id=$1 AND user_id=$2",
+			s.ID, userID, s.Weight, s.Exercise, s.Repetitions, time.Now())
 
 	return err
 }
@@ -300,9 +300,10 @@ func (s *set) deleteSet(db *sql.DB, userID string) (int64, error) {
 }
 
 func (s *set) createSet(db *sql.DB, userID string) error {
+	current := time.Now()
 	err := db.QueryRow(
-		"INSERT INTO sets(user_id, weight, exercise, repetitions) VALUES($1, $2, $3, $4) RETURNING id",
-		userID, s.Weight, s.Exercise, s.Repetitions).Scan(&s.ID)
+		"INSERT INTO sets(user_id, weight, exercise, repetitions, created, modified) VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
+		userID, s.Weight, s.Exercise, s.Repetitions, current, current).Scan(&s.ID)
 
 	if err != nil {
 		return err

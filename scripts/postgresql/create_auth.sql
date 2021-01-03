@@ -4,6 +4,8 @@ CREATE TABLE users (
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     enabled INTEGER NOT NULL DEFAULT 1,
+    created TIMESTAMP WITH TIME ZONE NOT NULL,
+    modified TIMESTAMP WITH TIME ZONE NOT NULL,
     CONSTRAINT users_pkey PRIMARY KEY (user_id)
 );
 
@@ -11,6 +13,8 @@ CREATE TABLE users (
 CREATE TABLE authorities (
     user_id TEXT NOT NULL,
     authority TEXT NOT NULL,
+    created TIMESTAMP WITH TIME ZONE NOT NULL,
+    modified TIMESTAMP WITH TIME ZONE NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
