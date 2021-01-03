@@ -74,7 +74,6 @@ func (s *Server) handleGetSets() http.HandlerFunc {
 			return
 		}
 
-		log.Printf("FOOO %s", claims.UserID)
 		// Logic
 		var set set
 		skip, _ := strconv.Atoi(r.FormValue("skip"))
@@ -176,10 +175,15 @@ func (s *Server) handleUpdateSet() http.HandlerFunc {
 		}
 
 		set.ID = id
-
-		if err := set.updateSet(s.DB, claims.UserID); err != nil {
+		affectedRows, err := set.updateSet(s.DB, claims.UserID)
+		if err != nil {
 			log.Println(err.Error())
 			respondWithError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
+
+		if affectedRows == 0 {
+			respondWithError(w, http.StatusNotFound, "Not found")
 			return
 		}
 
@@ -249,12 +253,17 @@ func (s *set) getSets(db *sql.DB, start, count int, userID string) ([]set, error
 	return sets, nil
 }
 
-func (s *set) updateSet(db *sql.DB, userID string) error {
-	_, err :=
+func (s *set) updateSet(db *sql.DB, userID string) (int64, error) {
+	result, err :=
 		db.Exec("UPDATE sets SET weight=$3, exercise=$4, repetitions=$5, modified=$6 WHERE id=$1 AND user_id=$2",
 			s.ID, userID, s.Weight, s.Exercise, s.Repetitions, time.Now())
 
-	return err
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return affected, err
 }
 
 func (s *set) deleteSet(db *sql.DB, userID string) (int64, error) {
