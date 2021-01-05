@@ -12,21 +12,21 @@ import (
 func (s *Server) routes() {
 	// Authentication
 	s.Router.HandleFunc("/api/login", s.logHTTP(s.handleLogin())).Methods("POST")
-	s.Router.HandleFunc("/api/refresh", s.validateToken(s.logHTTP(s.handleRefresh()))).Methods("POST")
+	s.Router.HandleFunc("/api/refresh", s.authenticate(s.logHTTP(s.handleRefresh()))).Methods("POST")
 	s.Router.HandleFunc("/api/register", s.logHTTP(s.handleRegister())).Methods("POST")
 
 	// Heartbeat
-	s.Router.HandleFunc("/api/heartbeat", s.validateToken(s.logHTTP(s.handleHeartbeat()))).Methods("GET")
+	s.Router.HandleFunc("/api/heartbeat", s.authenticate(s.logHTTP(s.handleHeartbeat()))).Methods("GET")
 
 	// Manage sets
-	s.Router.HandleFunc("/api/v1/sets", s.validateToken(s.logHTTP(s.handleGetSets()))).Methods("GET")
-	s.Router.HandleFunc("/api/v1/sets", s.validateToken(s.logHTTP(s.handleCreateSet()))).Methods("POST")
-	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.validateToken(s.logHTTP(s.handleGetSet()))).Methods("GET")
-	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.validateToken(s.logHTTP(s.handleUpdateSet()))).Methods("PUT")
-	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.validateToken(s.logHTTP(s.handleDeleteSet()))).Methods("DELETE")
+	s.Router.HandleFunc("/api/v1/sets", s.authenticate(s.logHTTP(s.handleGetSets()))).Methods("GET")
+	s.Router.HandleFunc("/api/v1/sets", s.authenticate(s.logHTTP(s.handleCreateSet()))).Methods("POST")
+	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.authenticate(s.logHTTP(s.handleGetSet()))).Methods("GET")
+	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.authenticate(s.logHTTP(s.handleUpdateSet()))).Methods("PUT")
+	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.authenticate(s.logHTTP(s.handleDeleteSet()))).Methods("DELETE")
 }
 
-func (s *Server) validateToken(h http.HandlerFunc) http.HandlerFunc {
+func (s *Server) authenticate(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		claims := &Claims{}
 
