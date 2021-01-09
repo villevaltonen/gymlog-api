@@ -47,6 +47,7 @@ func (s *Server) Initialize(user, password, dbname, dbhost string) {
 
 	// Router
 	s.Router = mux.NewRouter()
+	s.Router.Use(mux.CORSMethodMiddleware(s.Router))
 	s.routes()
 }
 
