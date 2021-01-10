@@ -18,25 +18,25 @@ func TestLogin(t *testing.T) {
 
 	// Correct credentials
 	var jsonStr1 = []byte(`{"username":"user1@localhost.com", "password": "password1"}`)
-	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr1))
+	req, _ := http.NewRequest("POST", "/api/users/login", bytes.NewBuffer(jsonStr1))
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	// Incorrect password
 	var jsonStr2 = []byte(`{"username":"user1@localhost.com", "password": "passwordnotcorrect"}`)
-	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr2))
+	req, _ = http.NewRequest("POST", "/api/users/login", bytes.NewBuffer(jsonStr2))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusUnauthorized, response.Code)
 
 	// Username not found
 	var jsonStr3 = []byte(`{"username":"usernotfound@localhost.com", "password": "password1"}`)
-	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr3))
+	req, _ = http.NewRequest("POST", "/api/users/login", bytes.NewBuffer(jsonStr3))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 
 	// Incorrect username
 	var jsonStr4 = []byte(`{"username":"invalidemail", "password": "password1"}`)
-	req, _ = http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr4))
+	req, _ = http.NewRequest("POST", "/api/users/login", bytes.NewBuffer(jsonStr4))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 }
@@ -44,38 +44,38 @@ func TestLogin(t *testing.T) {
 func TestRegister(t *testing.T) {
 	// New user
 	var jsonStr1 = []byte(`{"username":"user3@localhost.com", "password": "password3"}`)
-	req, _ := http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr1))
+	req, _ := http.NewRequest("POST", "/api/users/register", bytes.NewBuffer(jsonStr1))
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusCreated, response.Code)
 
 	// Duplicate user
 	var jsonStr2 = []byte(`{"username":"user1@localhost.com", "password": "password1"}`)
-	req, _ = http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr2))
+	req, _ = http.NewRequest("POST", "/api/users/register", bytes.NewBuffer(jsonStr2))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 
 	// Incorrect username
 	var jsonStr3 = []byte(`{"username":"user3", "password": "password3"}`)
-	req, _ = http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr3))
+	req, _ = http.NewRequest("POST", "/api/users/register", bytes.NewBuffer(jsonStr3))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 
 	// Missing field
 	var jsonStr4 = []byte(`{"username":"user4"}`)
-	req, _ = http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonStr4))
+	req, _ = http.NewRequest("POST", "/api/users/register", bytes.NewBuffer(jsonStr4))
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 }
 
 func TestMethodNotAllowed(t *testing.T) {
-	// GET to /api/register
-	req, _ := http.NewRequest("GET", "/api/register", nil)
+	// GET to /api/users/register
+	req, _ := http.NewRequest("GET", "/api/users/register", nil)
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusMethodNotAllowed, response.Code)
 }
 
 func TestCORS(t *testing.T) {
-	req, _ := http.NewRequest("OPTIONS", "/api/register", nil)
+	req, _ := http.NewRequest("OPTIONS", "/api/users/register", nil)
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
@@ -100,7 +100,7 @@ func TestCORS(t *testing.T) {
 
 func authenticate(username, password string) *http.Cookie {
 	var jsonStr = []byte(fmt.Sprintf(`{"username":"%s", "password": "%s"}`, username, password))
-	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonStr))
+	req, _ := http.NewRequest("POST", "/api/users/login", bytes.NewBuffer(jsonStr))
 	response := executeRequest(req)
 	cookie := response.Result().Cookies()[0]
 	return cookie

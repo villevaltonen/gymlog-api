@@ -11,9 +11,9 @@ import (
 
 func (s *Server) routes() {
 	// Authentication
-	s.Router.HandleFunc("/api/login", s.middleware(s.handleLogin(), false)).Methods(http.MethodPost, http.MethodOptions)
-	s.Router.HandleFunc("/api/refresh", s.middleware(s.handleRefresh(), true)).Methods(http.MethodPost, http.MethodOptions)
-	s.Router.HandleFunc("/api/register", s.middleware(s.handleRegister(), false)).Methods(http.MethodPost, http.MethodOptions)
+	s.Router.HandleFunc("/api/users/login", s.middleware(s.handleLogin(), false)).Methods(http.MethodPost, http.MethodOptions)
+	s.Router.HandleFunc("/api/users/refresh", s.middleware(s.handleRefresh(), true)).Methods(http.MethodPost, http.MethodOptions)
+	s.Router.HandleFunc("/api/users/register", s.middleware(s.handleRegister(), false)).Methods(http.MethodPost, http.MethodOptions)
 
 	// Heartbeat
 	s.Router.HandleFunc("/api/heartbeat", s.middleware(s.handleHeartbeat(), true)).Methods(http.MethodGet, http.MethodOptions)
