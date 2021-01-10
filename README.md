@@ -13,4 +13,5 @@ An application for tracking workouts written in Go. The application is built for
 ### TODO
 
 - CORS-origin to env-variable
+- CORS refactor to middleware
 - Clean up error messages to client
