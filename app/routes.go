@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -10,30 +11,34 @@ import (
 )
 
 func (s *Server) routes() {
+	// CORS
+	s.Router.Methods(http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions).HandlerFunc(s.corsHandler())
+
 	// Authentication
-	s.Router.HandleFunc("/api/login", s.corsHandler(s.logHTTP(s.handleLogin()))).Methods(http.MethodPost, http.MethodOptions)
-	s.Router.HandleFunc("/api/refresh", s.corsHandler(s.authenticate(s.logHTTP(s.handleRefresh())))).Methods(http.MethodPost, http.MethodOptions)
-	s.Router.HandleFunc("/api/register", s.corsHandler(s.logHTTP(s.handleRegister()))).Methods(http.MethodPost, http.MethodOptions)
+	s.Router.HandleFunc("/api/login", s.logHTTP(s.handleLogin())).Methods(http.MethodPost)
+	s.Router.HandleFunc("/api/refresh", s.authenticate(s.logHTTP(s.handleRefresh()))).Methods(http.MethodPost)
+	s.Router.HandleFunc("/api/register", s.logHTTP(s.handleRegister())).Methods(http.MethodPost)
 
 	// Heartbeat
-	s.Router.HandleFunc("/api/heartbeat", s.corsHandler(s.authenticate(s.logHTTP(s.handleHeartbeat())))).Methods(http.MethodGet, http.MethodOptions)
+	s.Router.HandleFunc("/api/heartbeat", s.authenticate(s.logHTTP(s.handleHeartbeat()))).Methods(http.MethodGet)
 
 	// Manage sets
-	s.Router.HandleFunc("/api/v1/sets", s.corsHandler(s.authenticate(s.logHTTP(s.handleGetSets())))).Methods(http.MethodGet, http.MethodOptions)
-	s.Router.HandleFunc("/api/v1/sets", s.corsHandler(s.authenticate(s.logHTTP(s.handleCreateSet())))).Methods(http.MethodPost, http.MethodOptions)
-	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.corsHandler(s.authenticate(s.logHTTP(s.handleGetSet())))).Methods(http.MethodGet, http.MethodOptions)
-	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.corsHandler(s.authenticate(s.logHTTP(s.handleUpdateSet())))).Methods(http.MethodPut, http.MethodOptions)
-	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.corsHandler(s.authenticate(s.logHTTP(s.handleDeleteSet())))).Methods(http.MethodDelete, http.MethodOptions)
+	s.Router.HandleFunc("/api/v1/sets", s.authenticate(s.logHTTP(s.handleGetSets()))).Methods(http.MethodGet)
+	s.Router.HandleFunc("/api/v1/sets", s.authenticate(s.logHTTP(s.handleCreateSet()))).Methods(http.MethodPost)
+	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.authenticate(s.logHTTP(s.handleGetSet()))).Methods(http.MethodGet)
+	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.authenticate(s.logHTTP(s.handleUpdateSet()))).Methods(http.MethodPut)
+	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.authenticate(s.logHTTP(s.handleDeleteSet()))).Methods(http.MethodDelete)
 }
 
-func (s *Server) corsHandler(h http.HandlerFunc) http.HandlerFunc {
+func (s *Server) corsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("CORS HANDLER TRIGGERED")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		if r.Method == http.MethodOptions {
 			return
 		}
-		h.ServeHTTP(w, r)
 	}
 }
 
