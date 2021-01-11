@@ -11,9 +11,9 @@ import (
 
 func (s *Server) routes() {
 	// Authentication
-	s.Router.HandleFunc("/api/login", s.logHTTP(s.handleLogin())).Methods(http.MethodPost)
-	s.Router.HandleFunc("/api/refresh", s.authenticate(s.logHTTP(s.handleRefresh()))).Methods(http.MethodPost)
-	s.Router.HandleFunc("/api/register", s.logHTTP(s.handleRegister())).Methods(http.MethodPost)
+	s.Router.HandleFunc("/api/users/login", s.logHTTP(s.handleLogin())).Methods(http.MethodPost)
+	s.Router.HandleFunc("/api/users/refresh", s.authenticate(s.logHTTP(s.handleRefresh()))).Methods(http.MethodPost)
+	s.Router.HandleFunc("/api/users/register", s.logHTTP(s.handleRegister())).Methods(http.MethodPost)
 
 	// Heartbeat
 	s.Router.HandleFunc("/api/heartbeat", s.authenticate(s.logHTTP(s.handleHeartbeat()))).Methods(http.MethodGet)
