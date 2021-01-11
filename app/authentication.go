@@ -141,6 +141,7 @@ func (s *Server) handleRefresh() http.HandlerFunc {
 			Value:    tokenString,
 			Expires:  expirationTime,
 			HttpOnly: true,
+			Path:     "/api",
 		})
 
 		respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
