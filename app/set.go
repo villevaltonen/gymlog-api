@@ -3,7 +3,6 @@ package app
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -134,8 +133,6 @@ func (s *Server) handleCreateSet() http.HandlerFunc {
 			respondWithError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
-
-		fmt.Println(set)
 
 		respondWithJSON(w, http.StatusCreated, set)
 	}
