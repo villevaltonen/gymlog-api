@@ -72,7 +72,7 @@ func (s *Server) handleLogin() http.HandlerFunc {
 		}
 
 		// Create JWT claims, which include username and expiration time
-		expirationTime := time.Now().Add(1 * time.Minute)
+		expirationTime := time.Now().Add(5 * time.Minute)
 		claims := &Claims{
 			Username: user.Username,
 			UserID:   user.UserID,
@@ -125,7 +125,7 @@ func (s *Server) handleRefresh() http.HandlerFunc {
 		}
 
 		// Now, create a new token for the current use, with a renewed expiration time
-		expirationTime := time.Now().Add(1 * time.Minute)
+		expirationTime := time.Now().Add(5 * time.Minute)
 		claims.ExpiresAt = expirationTime.Unix()
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		tokenString, err := token.SignedString(jwtKey)
