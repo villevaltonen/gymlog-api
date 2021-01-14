@@ -82,7 +82,51 @@ func TestGetSets(t *testing.T) {
 	req.AddCookie(authenticate("user1@localhost.com", "password1"))
 	response := executeRequest(req)
 
+	var m map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &m)
+	fmt.Printf("REGULAR: %v", m)
+
 	checkResponseCode(t, http.StatusOK, response.Code)
+}
+
+func TestSkipAndLimit(t *testing.T) {
+	clearTables()
+	userIDs := createTestUsers()
+	addSets(userIDs)
+	addSets(userIDs)
+
+	// Test skip
+	req, _ := http.NewRequest("GET", "/api/v1/sets?skip=1", nil)
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	var m map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &m)
+
+	// Numbers are compared to floats because JSON unmarshaling converts numbers to
+	// floats, when the target is a map[string]interface{}
+	if m["results"] != 1.0 {
+		t.Errorf("Expected results to be '1'. Got '%v'", m["results"])
+	}
+
+	// Test limit
+	req, _ = http.NewRequest("GET", "/api/v1/sets?limit=1", nil)
+	req.AddCookie(authenticate("user1@localhost.com", "password1"))
+	response = executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	var n map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &n)
+
+	// Numbers are compared to floats because JSON unmarshaling converts numbers to
+	// floats, when the target is a map[string]interface{}
+	if n["results"] != 1.0 {
+		t.Errorf("Expected results to be '1'. Got '%v'", n["results"])
+	}
+
 }
 
 func TestCreateSet(t *testing.T) {

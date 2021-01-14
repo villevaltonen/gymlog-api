@@ -283,8 +283,8 @@ func (s *set) deleteSet(db *sql.DB, userID string) (int64, error) {
 func (s *set) createSet(db *sql.DB, userID string) error {
 	current := time.Now()
 	err := db.QueryRow(
-		"INSERT INTO sets(user_id, weight, exercise, repetitions, created, modified) VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
-		userID, s.Weight, s.Exercise, s.Repetitions, current, current).Scan(&s.ID)
+		"INSERT INTO sets(user_id, weight, exercise, repetitions, created, modified) VALUES($1, $2, $3, $4, $5, $6) RETURNING id, created, modified",
+		userID, s.Weight, s.Exercise, s.Repetitions, current, current).Scan(&s.ID, &s.Created, &s.Modified)
 
 	if err != nil {
 		return err

@@ -79,60 +79,6 @@ func TestMethodNotAllowed(t *testing.T) {
 	checkResponseCode(t, http.StatusMethodNotAllowed, response.Code)
 }
 
-func TestCORS(t *testing.T) {
-	clearTables()
-
-	req, _ := http.NewRequest("OPTIONS", "/api/users/register", nil)
-	response := executeRequest(req)
-	checkResponseCode(t, http.StatusOK, response.Code)
-
-	headers := response.HeaderMap
-	fmt.Println(len(headers))
-	for k, v := range headers {
-		fmt.Println(k, "value is", v)
-	}
-
-	if headers.Get("Access-Control-Allow-Origin") != "http://localhost:3000" {
-		t.Errorf("Expected results to be 'http://localhost:3000'. Got '%v'", headers["Access-Control-Allow-Origin"])
-	}
-
-	if headers.Get("Access-Control-Allow-Methods") != string("GET, POST, PUT, DELETE, OPTIONS") {
-		t.Errorf("Expected results to be 'GET, POST, PUT, DELETE, OPTIONS'. Got '%v'", headers["Access-Control-Allow-Methods"])
-	}
-
-	if headers.Get("Access-Control-Allow-Headers") != string("Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, token") {
-		t.Errorf("Expected results to be 'Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization'. Got '%v'", headers["Access-Control-Allow-Headers"])
-	}
-
-	if headers.Get("Access-Control-Allow-Credentials") != "true" {
-		t.Errorf("Expected results to be 'true'. Got '%v'", headers["Access-Control-Allow-Credentials"])
-	}
-
-	var jsonStr1 = []byte(`{"username":"user3@localhost.com", "password": "password3"}`)
-	req, _ = http.NewRequest("POST", "/api/users/register", bytes.NewBuffer(jsonStr1))
-	response = executeRequest(req)
-	checkResponseCode(t, http.StatusCreated, response.Code)
-
-	headers = response.HeaderMap
-	fmt.Println(len(headers))
-	for k, v := range headers {
-		fmt.Println(k, "value is", v)
-	}
-
-	if headers.Get("Access-Control-Allow-Origin") != "http://localhost:3000" {
-		t.Errorf("Expected results to be 'http://localhost:3000'. Got '%v'", headers["Access-Control-Allow-Origin"])
-	}
-
-	if headers.Get("Access-Control-Allow-Methods") != string("GET, POST, PUT, DELETE, OPTIONS") {
-		t.Errorf("Expected results to be 'GET, POST, PUT, DELETE, OPTIONS'. Got '%v'", headers["Access-Control-Allow-Methods"])
-	}
-
-	if headers.Get("Access-Control-Allow-Headers") != string("Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, token") {
-		t.Errorf("Expected results to be 'Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization'. Got '%v'", headers["Access-Control-Allow-Headers"])
-	}
-
-}
-
 func authenticate(username, password string) *http.Cookie {
 	var jsonStr = []byte(fmt.Sprintf(`{"username":"%s", "password": "%s"}`, username, password))
 	req, _ := http.NewRequest("POST", "/api/users/login", bytes.NewBuffer(jsonStr))

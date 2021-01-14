@@ -11,43 +11,32 @@ import (
 
 func (s *Server) routes() {
 	// Authentication
-	s.Router.HandleFunc("/api/users/login", s.middleware(s.handleLogin(), false)).Methods(http.MethodPost, http.MethodOptions)
-	s.Router.HandleFunc("/api/users/refresh", s.middleware(s.handleRefresh(), true)).Methods(http.MethodPost, http.MethodOptions)
-	s.Router.HandleFunc("/api/users/register", s.middleware(s.handleRegister(), false)).Methods(http.MethodPost, http.MethodOptions)
+	s.Router.HandleFunc("/api/users/login", s.logHTTP(s.handleLogin())).Methods(http.MethodPost)
+	s.Router.HandleFunc("/api/users/refresh", s.authenticate(s.logHTTP(s.handleRefresh()))).Methods(http.MethodPost)
+	s.Router.HandleFunc("/api/users/register", s.logHTTP(s.handleRegister())).Methods(http.MethodPost)
 
 	// Heartbeat
-	s.Router.HandleFunc("/api/heartbeat", s.middleware(s.handleHeartbeat(), true)).Methods(http.MethodGet, http.MethodOptions)
+	s.Router.HandleFunc("/api/heartbeat", s.authenticate(s.logHTTP(s.handleHeartbeat()))).Methods(http.MethodGet)
 
 	// Manage sets
-	s.Router.HandleFunc("/api/v1/sets", s.middleware(s.handleGetSets(), true)).Methods(http.MethodGet, http.MethodOptions)
-	s.Router.HandleFunc("/api/v1/sets", s.middleware(s.handleCreateSet(), true)).Methods(http.MethodPost, http.MethodOptions)
-	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.middleware(s.handleGetSet(), true)).Methods(http.MethodGet, http.MethodOptions)
-	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.middleware(s.handleUpdateSet(), true)).Methods(http.MethodPut, http.MethodOptions)
-	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.middleware(s.handleDeleteSet(), true)).Methods(http.MethodDelete, http.MethodOptions)
+	s.Router.HandleFunc("/api/v1/sets", s.authenticate(s.logHTTP(s.handleGetSets()))).Methods(http.MethodGet)
+	s.Router.HandleFunc("/api/v1/sets", s.authenticate(s.logHTTP(s.handleCreateSet()))).Methods(http.MethodPost)
+	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.authenticate(s.logHTTP(s.handleGetSet()))).Methods(http.MethodGet)
+	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.authenticate(s.logHTTP(s.handleUpdateSet()))).Methods(http.MethodPut)
+	s.Router.HandleFunc("/api/v1/sets/{id:[0-9]+}", s.authenticate(s.logHTTP(s.handleDeleteSet()))).Methods(http.MethodDelete)
 }
 
-func (s *Server) middleware(h http.HandlerFunc, authentication bool) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if authentication == false {
-			s.cors(s.logHTTP(h)).ServeHTTP(w, r)
-		} else {
-			s.cors(s.logHTTP(s.authenticate(h))).ServeHTTP(w, r)
-		}
-	}
-}
-
-func (s *Server) cors(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, token")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		if r.Method == http.MethodOptions {
-			return
-		}
-		h.ServeHTTP(w, r)
-	}
-}
+// func (s *Server) cors(h http.HandlerFunc) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+// 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+// 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+// 		if r.Method == http.MethodOptions {
+// 			return
+// 		}
+// 		h.ServeHTTP(w, r)
+// 	}
+// }
 
 func (s *Server) authenticate(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
