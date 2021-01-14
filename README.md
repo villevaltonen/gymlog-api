@@ -12,5 +12,4 @@ An application for tracking workouts written in Go. The application is built for
 
 ### TODO
 
-- Unit tests for skip and limit
 - Clean up error messages to client
