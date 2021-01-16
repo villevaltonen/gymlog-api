@@ -1,7 +1,6 @@
-version: '3.1'
+version: "3.1"
 
 services:
-
   postgres:
     image: postgres
     container_name: gymlog_db_compose
@@ -21,10 +20,10 @@ services:
       timeout: 20s
       retries: 10
 
-  gymlog_go:
+  gymlog_api:
     build: .
-    container_name: gymlog_go_compose
-    image: gymlog_go:latest
+    container_name: gymlog_api_compose
+    image: gymlog_api:latest
     depends_on:
       - postgres
     ports:
