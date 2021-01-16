@@ -1,4 +1,4 @@
-# GYMLOG-GO
+# GYMLOG-API
 
 An application for tracking workouts written in Go. The application is built for learning purposes only. The application provides REST APIs for basic user actions and managing the sets of your workout. It uses PostgreSQL as a database and the authentication is done with JWT.
 
